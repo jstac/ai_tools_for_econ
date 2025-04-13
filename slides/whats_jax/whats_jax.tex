@@ -1,0 +1,328 @@
+\documentclass[
+    xcolor={svgnames,dvipsnames},
+    hyperref={colorlinks, citecolor=DeepPink4, linkcolor=DarkRed, urlcolor=DarkBlue}
+    ]{beamer}  % for hardcopy add 'trans'
+
+\mode<presentation>
+{
+  \usetheme{Singapore}
+  % or ...
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+%\usefonttheme{professionalfonts}
+%\usepackage[english]{babel}
+% or whatever
+%\usepackage[latin1]{inputenc}
+% or whatever
+%\usepackage{times}
+%\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+%\usepackage{fontspec}
+%\setmonofont{CMU Typewriter Text}
+%\setmonofont{Consolas}
+
+\usepackage{fontspec} 
+%\usepackage[xcharter]{newtxmath}
+%\setmainfont{XCharter}
+\usepackage{unicode-math}
+%\setmathfont{XCharter-Math.otf}
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase] % provides unicode characters 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%% start my preamble %%%%%%%%%%%%%%%%%%%%%%
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bbm}
+\usepackage{mathrsfs}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+
+
+% Quotes at start of chapters / sections
+\usepackage{epigraph}  
+%\renewcommand{\epigraphflush}{flushleft}
+%\renewcommand{\sourceflush}{flushleft}
+\renewcommand{\epigraphwidth}{6in}
+
+%% Fonts
+
+%\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+%\usepackage{fontspec}
+%\defaultfontfeatures{Ligatures=TeX}
+%\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
+%\setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
+%\setmathfont{Asana Math}
+%\setmainfont{Optima}
+%\setmathrm{Optima}
+%\setboldmathrm[BoldFont={Optima ExtraBlack}]{Optima Bold}
+
+% Some colors
+
+\definecolor{aquamarine}{RGB}{69,139,116}
+\definecolor{midnightblue}{RGB}{25,25,112}
+\definecolor{darkslategrey}{RGB}{47,79,79}
+\definecolor{darkorange4}{RGB}{139,90,0}
+\definecolor{dogerblue}{RGB}{24,116,205}
+\definecolor{blue2}{RGB}{0,0,238}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\definecolor{DarkOrange1}{RGB}{255,127,0}
+\definecolor{ForestGreen}{RGB}{34,139,34}
+\definecolor{DarkRed}{RGB}{139, 0, 0}
+\definecolor{DarkBlue}{RGB}{0, 0, 139}
+\definecolor{Blue}{RGB}{0, 0, 255}
+\definecolor{Brown}{RGB}{165,42,42}
+
+
+\setlength{\parskip}{1.5ex plus0.5ex minus0.5ex}
+
+%\renewcommand{\baselinestretch}{1.05}
+%\setlength{\parskip}{1.5ex plus0.5ex minus0.5ex}
+%\setlength{\parindent}{0pt}
+
+% Typesetting code
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\usepackage{minted}
+\setminted{mathescape, frame=lines, framesep=3mm}
+\usemintedstyle{friendly}
+%\newminted{python}{}
+%\newminted{c}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+%\newminted{java}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+%\newminted{julia}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+%\newminted{ipython}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+
+
+\newcommand{\Fact}{\textcolor{Brown}{\bf Fact. }}
+\newcommand{\Facts}{\textcolor{Brown}{\bf Facts }}
+\newcommand{\keya}{\textcolor{turquois4}{\bf Key Idea. }}
+\newcommand{\Factnodot}{\textcolor{Brown}{\bf Fact }}
+\newcommand{\Eg}{\textcolor{ForestGreen}{Example. }}
+\newcommand{\Egs}{\textcolor{ForestGreen}{Examples. }}
+\newcommand{\Ex}{{\bf Ex. }}
+
+
+
+\renewcommand{\theFancyVerbLine}{\sffamily
+    \textcolor[rgb]{0.5,0.5,1.0}{\scriptsize {\arabic{FancyVerbLine}}}}
+
+\newcommand{\navy}[1]{\textcolor{DarkBlue}{\bf #1}}
+\newcommand{\brown}[1]{\textcolor{Brown}{\sf #1}}
+\newcommand{\green}[1]{\textcolor{ForestGreen}{\sf #1}}
+\newcommand{\blue}[1]{\textcolor{Blue}{\sf #1}}
+\newcommand{\emp}[1]{\textcolor{DarkOrange1}{\bf #1}}
+\newcommand{\red}[1]{\textcolor{Red}{\bf #1}}
+
+% Symbols, redefines, etc.
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+
+\DeclareMathOperator{\cl}{cl}
+\DeclareMathOperator{\interior}{int}
+\DeclareMathOperator{\Prob}{Prob}
+\DeclareMathOperator{\determinant}{det}
+\DeclareMathOperator{\trace}{trace}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\corr}{corr}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\mse}{mse}
+\DeclareMathOperator{\se}{se}
+\DeclareMathOperator{\row}{row}
+\DeclareMathOperator{\col}{col}
+\DeclareMathOperator{\range}{rng}
+\DeclareMathOperator{\dimension}{dim}
+\DeclareMathOperator{\bias}{bias}
+
+
+% mics short cuts and symbols
+\newcommand{\st}{\ensuremath{\ \mathrm{s.t.}\ }}
+\newcommand{\setntn}[2]{ \{ #1 : #2 \} }
+\newcommand{\cf}[1]{ \lstinline|#1| }
+\newcommand{\fore}{\therefore \quad}
+\newcommand{\tod}{\stackrel { d } {\to} }
+\newcommand{\toprob}{\stackrel { p } {\to} }
+\newcommand{\toms}{\stackrel { ms } {\to} }
+\newcommand{\eqdist}{\stackrel {\textrm{ \scriptsize{d} }} {=} }
+\newcommand{\iidsim}{\stackrel {\textrm{ {\sc iid }}} {\sim} }
+\newcommand{\1}{\mathbbm 1}
+\newcommand{\dee}{\,{\rm d}}
+\newcommand{\given}{\, | \,}
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+
+\newcommand{\boldA}{\mathbf A}
+\newcommand{\boldB}{\mathbf B}
+\newcommand{\boldC}{\mathbf C}
+\newcommand{\boldD}{\mathbf D}
+\newcommand{\boldM}{\mathbf M}
+\newcommand{\boldP}{\mathbf P}
+\newcommand{\boldQ}{\mathbf Q}
+\newcommand{\boldI}{\mathbf I}
+\newcommand{\boldX}{\mathbf X}
+\newcommand{\boldY}{\mathbf Y}
+\newcommand{\boldZ}{\mathbf Z}
+
+\newcommand{\bSigmaX}{ {\boldsymbol \Sigma_{\hboldbeta}} }
+\newcommand{\hbSigmaX}{ \mathbf{\hat \Sigma_{\hboldbeta}} }
+
+\newcommand{\RR}{\mathbbm R}
+\newcommand{\NN}{\mathbbm N}
+\newcommand{\PP}{\mathbbm P}
+\newcommand{\EE}{\mathbbm E \,}
+\newcommand{\XX}{\mathbbm X}
+\newcommand{\ZZ}{\mathbbm Z}
+\newcommand{\QQ}{\mathbbm Q}
+
+\newcommand{\fF}{\mathcal F}
+\newcommand{\dD}{\mathcal D}
+\newcommand{\lL}{\mathcal L}
+\newcommand{\gG}{\mathcal G}
+\newcommand{\hH}{\mathcal H}
+\newcommand{\nN}{\mathcal N}
+\newcommand{\pP}{\mathcal P}
+
+
+
+
+\title{What's JAX}
+
+
+
+\author{John Stachurski}
+
+
+\date{2025}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+
+\begin{frame}
+    \frametitle{Topics}
+
+    \begin{itemize}
+        \item Foo
+        \vspace{0.5em}
+        \item Bar
+        \vspace{0.5em}
+    \end{itemize}
+
+\end{frame}
+
+
+
+    
+
+\begin{frame}
+    \frametitle{Focus on JAX}
+
+    \url{https://jax.readthedocs.io/en/latest/}
+    
+            \vspace{0.5em}
+    \begin{itemize}
+        \item \brown{J}ust-in-time compilation
+            \vspace{0.5em}
+        \item \brown{A}utomatic differentiation
+            \vspace{0.5em}
+        \item \brown{X}ccelerated linear algebra
+    \end{itemize}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+    
+    \vspace{-1em}
+    \begin{minted}{python}
+import jax.numpy as jnp
+from jax import grad, jit
+
+def f(θ, x):
+  for W, b in θ:
+    w = W @ x + b
+    x = jnp.tanh(w)  
+  return x
+
+def loss(θ, x, y):
+  return jnp.sum((y - f(θ, x))**2)
+
+grad_loss = jit(grad(loss))  # Now use gradient descent 
+    \end{minted}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    \Eg AlphaFold3 (Google JAX)
+
+        \vspace{0.5em}
+    \textbf{Highly accurate protein structure prediction with AlphaFold}
+
+        \vspace{0.5em}
+    John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov,
+    Olaf Ronneberger, Kathryn Tunyasuvunakool,\ldots 
+
+        \vspace{0.5em}
+    \underline{Nature} Vol.\ 596 (2021)
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Citation count $= ~30$K
+        \vspace{0.5em}
+        \item Nobel Prize in Chemistry 2024
+    \end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+    
+    \begin{minted}{python}
+# Apply gradient updates to all parameters
+def sgd_update(params, grads, learning_rate):
+    return jax.tree_map(
+        lambda p, g: p - learning_rate * g, 
+        params, 
+        grads
+    )
+
+# Calculate gradients (PyTree with same structure as params)
+grads = jax.grad(loss_fn)(params, inputs, targets)
+
+# Update all parameters at once
+updated_params = sgd_update(params, grads, 0.01)    
+    \end{minted}
+
+\end{frame}
