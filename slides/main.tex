@@ -1,0 +1,783 @@
+\documentclass[
+    xcolor={svgnames,dvipsnames},
+    hyperref={colorlinks, citecolor=DeepPink4, linkcolor=DarkRed, urlcolor=DarkBlue}
+    ]{beamer}  % for hardcopy add 'trans'
+
+\mode<presentation>
+{
+  \usetheme{Singapore}
+  % or ...
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+%\usefonttheme{professionalfonts}
+%\usepackage[english]{babel}
+% or whatever
+%\usepackage[latin1]{inputenc}
+% or whatever
+%\usepackage{times}
+%\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+%\usepackage{fontspec}
+%\setmonofont{CMU Typewriter Text}
+%\setmonofont{Consolas}
+
+\usepackage{fontspec} 
+%\usepackage[xcharter]{newtxmath}
+%\setmainfont{XCharter}
+\usepackage{unicode-math}
+%\setmathfont{XCharter-Math.otf}
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase] % provides unicode characters 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%% start my preamble %%%%%%%%%%%%%%%%%%%%%%
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bbm}
+\usepackage{mathrsfs}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+
+
+% Quotes at start of chapters / sections
+\usepackage{epigraph}  
+%\renewcommand{\epigraphflush}{flushleft}
+%\renewcommand{\sourceflush}{flushleft}
+\renewcommand{\epigraphwidth}{6in}
+
+%% Fonts
+
+%\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+%\usepackage{fontspec}
+%\defaultfontfeatures{Ligatures=TeX}
+%\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
+%\setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
+%\setmathfont{Asana Math}
+%\setmainfont{Optima}
+%\setmathrm{Optima}
+%\setboldmathrm[BoldFont={Optima ExtraBlack}]{Optima Bold}
+
+% Some colors
+
+\definecolor{aquamarine}{RGB}{69,139,116}
+\definecolor{midnightblue}{RGB}{25,25,112}
+\definecolor{darkslategrey}{RGB}{47,79,79}
+\definecolor{darkorange4}{RGB}{139,90,0}
+\definecolor{dogerblue}{RGB}{24,116,205}
+\definecolor{blue2}{RGB}{0,0,238}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\definecolor{DarkOrange1}{RGB}{255,127,0}
+\definecolor{ForestGreen}{RGB}{34,139,34}
+\definecolor{DarkRed}{RGB}{139, 0, 0}
+\definecolor{DarkBlue}{RGB}{0, 0, 139}
+\definecolor{Blue}{RGB}{0, 0, 255}
+\definecolor{Brown}{RGB}{165,42,42}
+
+
+\setlength{\parskip}{1.5ex plus0.5ex minus0.5ex}
+
+%\renewcommand{\baselinestretch}{1.05}
+%\setlength{\parskip}{1.5ex plus0.5ex minus0.5ex}
+%\setlength{\parindent}{0pt}
+
+% Typesetting code
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\usepackage{minted}
+\setminted{mathescape, frame=lines, framesep=3mm}
+\usemintedstyle{friendly}
+%\newminted{python}{}
+%\newminted{c}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+%\newminted{java}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+%\newminted{julia}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+%\newminted{ipython}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+
+
+\newcommand{\Fact}{\textcolor{Brown}{\bf Fact. }}
+\newcommand{\Facts}{\textcolor{Brown}{\bf Facts }}
+\newcommand{\keya}{\textcolor{turquois4}{\bf Key Idea. }}
+\newcommand{\Factnodot}{\textcolor{Brown}{\bf Fact }}
+\newcommand{\Eg}{\textcolor{ForestGreen}{Example. }}
+\newcommand{\Egs}{\textcolor{ForestGreen}{Examples. }}
+\newcommand{\Ex}{{\bf Ex. }}
+
+
+
+\renewcommand{\theFancyVerbLine}{\sffamily
+    \textcolor[rgb]{0.5,0.5,1.0}{\scriptsize {\arabic{FancyVerbLine}}}}
+
+\newcommand{\navy}[1]{\textcolor{DarkBlue}{\bf #1}}
+\newcommand{\brown}[1]{\textcolor{Brown}{\sf #1}}
+\newcommand{\green}[1]{\textcolor{ForestGreen}{\sf #1}}
+\newcommand{\blue}[1]{\textcolor{Blue}{\sf #1}}
+\newcommand{\emp}[1]{\textcolor{DarkOrange1}{\bf #1}}
+\newcommand{\red}[1]{\textcolor{Red}{\bf #1}}
+
+% Symbols, redefines, etc.
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+
+\DeclareMathOperator{\cl}{cl}
+\DeclareMathOperator{\interior}{int}
+\DeclareMathOperator{\Prob}{Prob}
+\DeclareMathOperator{\determinant}{det}
+\DeclareMathOperator{\trace}{trace}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\corr}{corr}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\mse}{mse}
+\DeclareMathOperator{\se}{se}
+\DeclareMathOperator{\row}{row}
+\DeclareMathOperator{\col}{col}
+\DeclareMathOperator{\range}{rng}
+\DeclareMathOperator{\dimension}{dim}
+\DeclareMathOperator{\bias}{bias}
+
+
+% mics short cuts and symbols
+\newcommand{\st}{\ensuremath{\ \mathrm{s.t.}\ }}
+\newcommand{\setntn}[2]{ \{ #1 : #2 \} }
+\newcommand{\cf}[1]{ \lstinline|#1| }
+\newcommand{\fore}{\therefore \quad}
+\newcommand{\tod}{\stackrel { d } {\to} }
+\newcommand{\toprob}{\stackrel { p } {\to} }
+\newcommand{\toms}{\stackrel { ms } {\to} }
+\newcommand{\eqdist}{\stackrel {\textrm{ \scriptsize{d} }} {=} }
+\newcommand{\iidsim}{\stackrel {\textrm{ {\sc iid }}} {\sim} }
+\newcommand{\1}{\mathbbm 1}
+\newcommand{\dee}{\,{\rm d}}
+\newcommand{\given}{\, | \,}
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+
+\newcommand{\boldA}{\mathbf A}
+\newcommand{\boldB}{\mathbf B}
+\newcommand{\boldC}{\mathbf C}
+\newcommand{\boldD}{\mathbf D}
+\newcommand{\boldM}{\mathbf M}
+\newcommand{\boldP}{\mathbf P}
+\newcommand{\boldQ}{\mathbf Q}
+\newcommand{\boldI}{\mathbf I}
+\newcommand{\boldX}{\mathbf X}
+\newcommand{\boldY}{\mathbf Y}
+\newcommand{\boldZ}{\mathbf Z}
+
+\newcommand{\bSigmaX}{ {\boldsymbol \Sigma_{\hboldbeta}} }
+\newcommand{\hbSigmaX}{ \mathbf{\hat \Sigma_{\hboldbeta}} }
+
+\newcommand{\RR}{\mathbbm R}
+\newcommand{\NN}{\mathbbm N}
+\newcommand{\PP}{\mathbbm P}
+\newcommand{\EE}{\mathbbm E \,}
+\newcommand{\XX}{\mathbbm X}
+\newcommand{\ZZ}{\mathbbm Z}
+\newcommand{\QQ}{\mathbbm Q}
+
+\newcommand{\fF}{\mathcal F}
+\newcommand{\dD}{\mathcal D}
+\newcommand{\lL}{\mathcal L}
+\newcommand{\gG}{\mathcal G}
+\newcommand{\hH}{\mathcal H}
+\newcommand{\nN}{\mathcal N}
+\newcommand{\pP}{\mathcal P}
+
+
+
+
+\title{An AI-Driven Revolution in Scientific Computing}
+
+
+
+\author{John Stachurski}
+
+
+\date{RBA Nov 2024}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+
+\begin{frame}
+    \frametitle{Topics}
+
+    \brown{Part 1}: Slides
+
+    \begin{itemize}
+        \item AI-driven scientific computing
+        \vspace{0.5em}
+        \item Applications  
+        \vspace{0.5em}
+    \end{itemize}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \brown{Part 2}: Hands on coding
+
+
+    \vspace{0.5em}
+
+    \begin{center}
+        \url{https://github.com/QuantEcon/rba_workshop_2024}
+    \end{center}
+
+
+\end{frame}
+
+
+
+\begin{frame}
+    \frametitle{AI-driven scientific computing}
+
+    AI is changing the world
+
+    \begin{itemize}
+        \item image processing / computer vision
+        \vspace{0.5em}
+        \item speech recognition, translation
+        \vspace{0.5em}
+        \item scientific knowledge discovery
+        \vspace{0.5em}
+        \item forecasting and prediction 
+        \vspace{0.5em}
+        \item generative AI
+    \end{itemize}
+
+    \pause
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+    Plus killer drones, skynet, etc.\ldots
+
+    
+\end{frame}
+
+\begin{frame}
+    
+    Projected spending on AI in 2024:
+
+    \begin{itemize}
+        \item Google: \$50 billion
+        \vspace{0.5em}
+        \item Microsoft: \$60 billion
+        \vspace{0.5em}
+        \item Meta: \$40 billion
+        \vspace{0.5em}
+        \item etc.
+    \end{itemize}
+
+    Investments in software and hardware
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    Software component is mainly open source
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+    What does this software do?
+
+\end{frame}
+
+
+
+
+
+\begin{frame}
+    \frametitle{Deep learning in two slides}
+    
+    Aim: approximate an unknown functional relationship
+    %
+    \begin{equation*}
+        y = f(x)
+        \qquad (x \in \RR^k, \; y \in \RR)
+    \end{equation*}
+
+    \Egs
+    %
+    \begin{itemize}
+        \item $x = $ cross section of returns, $y = $ return on oil futures tomorrow
+        \vspace{0.5em}
+        \item $x = $ weather sensor data, $y = $ max temp tomorrow
+    \end{itemize}
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+    Problem:
+
+    \begin{itemize}
+        \item observe $(x_i, y_i)_{i=1}^n$ and seek $f$ such that $y_{n+1}
+            \approx f(x_{n+1})$
+    \end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}
+
+    Nonlinear regression: choose model $\{f_\theta\}_{\theta \in \Theta}$ and minimize the empirical loss
+    %
+    \begin{equation*}
+        \ell(\theta) := \sum_{i=1}^n (y_i - f_\theta(x_i))^2
+        \quad \st \quad \theta \in \Theta
+    \end{equation*}
+
+
+    \pause
+    \vspace{0.5em}
+    In the case of ANNs, we consider all $f_\theta$ having the form
+    %
+    \begin{equation*}
+        f_\theta
+        = \sigma \circ A_{m} 
+            \circ \cdots \circ \sigma \circ A_{2}  \circ \sigma \circ A_{1}
+    \end{equation*}
+    %
+    where
+    %
+    \begin{itemize}
+        \item $A_{j} x = W_j x + b_j $ is an affine map 
+        \vspace{0.5em}
+        \begin{itemize}
+            \item \texttt{output = dot(kernel, input) + bias}
+        \end{itemize}
+        \vspace{0.5em}
+        \item $\sigma$ is a nonlinear ``activation'' function
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    
+
+    Minimizing a smooth loss functions  -- what algorithm?
+    
+    \begin{figure}
+       \begin{center}
+        \scalebox{0.15}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{gdi.png}}
+       \end{center}
+    \end{figure}
+
+    Source: \url{https://danielkhv.com/}
+
+\end{frame}
+
+
+\begin{frame}
+
+    Deep learning: $\theta \in \RR^d$ where $d = ?$
+    
+    \begin{figure}
+       \begin{center}
+        \scalebox{0.14}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{loss2.jpg}}
+       \end{center}
+    \end{figure}
+
+    Source: \url{https://losslandscape.com/gallery/}
+
+\end{frame}
+
+
+
+
+\begin{frame}
+    \frametitle{How does it work?}
+    
+    Why is it possible to minimize over $\theta \in \RR^d$ when $d=10^{12}$ ?!?
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \pause
+
+    Core elements
+    %
+    \begin{itemize}
+        \item automatic differentiation (for \underline{gradient} descent)
+        \vspace{0.5em}
+        \item parallelization (GPUs or TPUs)
+        \vspace{0.5em}
+        \item Compilers / JIT-compilers
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Automatic differentiation}
+
+    \vspace{0.5em}
+    ``Exact numerical'' differentiation
+    
+    \begin{minted}{python}
+
+def loss(θ, x, y):
+  return jnp.sum((y - f(θ, x))**2)
+
+loss_gradient = grad(loss)
+
+    \end{minted}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    Now use gradient descent\ldots
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Parallelization}
+
+    
+    \begin{minted}{python}
+outputs = pmap(f, data)  
+    \end{minted}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \begin{itemize}
+        \item multithreading over GPU cores (how many?)
+        \vspace{0.5em}
+        \item multiprocessing over accelerators in a GPU farm / supercomputing
+            cluster (how many?)
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    \begin{figure}
+       \begin{center}
+        \scalebox{0.18}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{dgx.png}}
+       \end{center}
+    \end{figure}
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Just-in-time compilers}
+
+    \vspace{0.5em}
+    
+    \begin{minted}{python}
+@jit
+def f(x):
+    return jnp.sin(x) - jnp.cos(x**2)
+    \end{minted}
+
+    \vspace{0.5em}
+    Advantages over AOT compilers:
+
+    \begin{itemize}
+        \item cleaner code
+    \vspace{0.5em}
+        \item more portable
+    \vspace{0.5em}
+        \item automatic parallelization (same code for CPUs / GPUs)
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Advantages over NumPy / MATLAB
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item can specialize machine code based on parameter types / shapes
+        \vspace{0.5em}
+        \item automatically matches tasks with accelerators (GPU / TPU)
+        \vspace{0.5em}
+        \item fuses array operations for speed and memory efficiency
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Platforms}
+    
+    Platforms that support AI / deep learning:
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Tensorflow
+        \vspace{0.5em}
+        \item \brown{PyTorch} (Llama, ChatGPT)
+        \vspace{0.5em}
+        \item \brown{Google JAX} (Gemini, DeepMind)
+        \vspace{0.5em}
+        \item Keras (backends $=$ JAX, PyTorch)
+        \vspace{0.5em}
+        \item Mojo? (Modular (Python))
+        \vspace{0.5em}
+        \item MATLAB? 
+    \end{itemize}
+
+\end{frame}
+
+
+
+
+\begin{frame}
+    
+    Popularity
+
+    
+    \begin{figure}
+       \begin{center}
+        \scalebox{0.32}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{c.png}}
+       \end{center}
+    \end{figure}
+
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Focus on JAX}
+
+    \url{https://jax.readthedocs.io/en/latest/}
+    
+            \vspace{0.5em}
+    \begin{itemize}
+        \item \brown{J}ust-in-time compilation
+            \vspace{0.5em}
+        \item \brown{A}utomatic differentiation
+            \vspace{0.5em}
+        \item \brown{X}ccelerated linear algebra
+    \end{itemize}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    
+    \vspace{-1em}
+    \begin{minted}{python}
+import jax.numpy as jnp
+from jax import grad, jit
+
+def f(θ, x):
+  for W, b in θ:
+    w = W @ x + b
+    x = jnp.tanh(w)  
+  return x
+
+def loss(θ, x, y):
+  return jnp.sum((y - f(θ, x))**2)
+
+grad_loss = jit(grad(loss))  # Now use gradient descent 
+    \end{minted}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    \Eg AlphaFold3 (Google JAX)
+
+        \vspace{0.5em}
+    \textbf{Highly accurate protein structure prediction with AlphaFold}
+
+        \vspace{0.5em}
+    John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov,
+    Olaf Ronneberger, Kathryn Tunyasuvunakool,\ldots 
+
+        \vspace{0.5em}
+    \underline{Nature} Vol.\ 596 (2021)
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Citation count $= ~30$K
+        \vspace{0.5em}
+        \item Nobel Prize in Chemistry 2024
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{AI tools for economic modeling}
+
+
+    Let's say that you want to do computational macro rather than deep learning
+
+    \vspace{0.5em}
+    Can these new AI tools be applied?
+
+    \pause
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    Yes!
+
+    \begin{itemize}
+        \item fast matrix algebra
+        \vspace{0.5em}
+        \item fast solutions to linear systems
+        \vspace{0.5em}
+        \item fast nonlinear system solvers
+        \vspace{0.5em}
+        \item fast optimization, etc.
+    \end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}
+
+    Advantages of JAX (vs PyTorch / Numba / etc.) for economists:
+    %
+    \begin{itemize}
+        \item exposes low level functions
+            \vspace{0.5em}
+        \item elegant functional programming style -- close to maths
+            \vspace{0.5em}
+        \item elegant autodiff tools
+            \vspace{0.5em}
+        \item array operations follow standard NumPy API
+            \vspace{0.5em}
+        \item automatic parallelization
+            \vspace{0.5em}
+        \item same code, multiple backends (CPUs, GPUs, TPUs)
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Case Study}
+
+    The CBC uses the ``overborrowing'' model of Bianchi (2011)
+
+    \begin{itemize}
+        \item credit constraint loosens during booms
+        \item bad shocks $\to$ sudden stops
+    \end{itemize}
+
+    \vspace{0.5em}
+    CBC implementation in MATLAB 
+
+    \begin{itemize}
+        \item runs on \$10,000 mainframe with 356 CPUs and 1TB RAM
+        \item runtime $=$ 12 hours
+    \end{itemize}
+
+    \pause
+    \vspace{0.5em}
+    Rewrite in Python + Google JAX
+
+    \begin{itemize}
+        \item runs on \$400 gaming GPU with 10GB RAM
+        \item runtime $=$ 4.17 seconds
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Live coding}
+
+    See notebooks in
+    
+    \begin{center}
+        \url{https://github.com/QuantEcon/rba_workshop_2024}
+    \end{center}
+
+    \vspace{0.5em}
+    Steps
+    %
+    \begin{enumerate}
+    \item Go to Google Colab (\url{https://colab.google/})
+    \vspace{0.5em}
+    \item Open notebook $\to$ GitHub $\to$ quantecon $\to$ \texttt{rba\_workshop\_2024}
+        $\to$ select notebook
+    \vspace{0.5em}
+    \item Edit $\to$ Notebook settings $\to$ select a GPU
+    \vspace{0.5em}
+    \item Shift-enter to run each cell
+    \end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{AI for Coding}
+
+    Intro 
+
+\end{frame}
+
+
+\begin{frame}
+
+    Claude:
+    
+    ``I'm definitely stronger with Python than MATLAB.
+
+    While I'm knowledgeable about both languages, my capabilities with Python
+    are more comprehensive. I have deeper familiarity with Python's extensive
+    ecosystem of libraries, frameworks, and modern development practices. I can
+    more confidently help with advanced Python topics, debugging complex Python
+    code, and implementing Python best practices.''
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Claude:
+
+    ``I'm definitely stronger with Python than Julia.
+
+    Python is one of my most proficient languages - I have deep familiarity with
+    its syntax, libraries, frameworks, and best practices across many domains
+    including data science, web development, machine learning, and
+    general-purpose programming.
+
+    While I understand Julia's syntax and core concepts, my expertise with it
+    isn't as comprehensive as with Python.''
+
+\end{frame}
+
+\end{document}
+
+
