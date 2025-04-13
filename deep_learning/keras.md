@@ -4,10 +4,10 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.7
+    jupytext_version: 1.16.2
 kernelspec:
-  display_name: Python
-  language: python3
+  display_name: Python 3 (ipykernel)
+  language: python
   name: python3
 ---
 
@@ -15,16 +15,11 @@ kernelspec:
 
 +++
 
-# GPU
+## Introduction
 
-This lecture was built using a machine with JAX installed and access to a GPU.
-
-To run this lecture on [Google Colab](https://colab.research.google.com/), click on the “play” icon top right, select Colab, and set the runtime environment to include a GPU.
-
-To run this lecture on your own machine, you need to install [Google JAX](https://github.com/google/jax).
 
 In this lecture we show how to implement one-dimensional nonlinear regression
-using a neural network.
+using a multilayer perceptron (i.e., neural network).
 
 We will use the popular deep learning library [Keras](https://keras.io/), which
 provides a simple interface to deep learning.
@@ -34,33 +29,34 @@ done by one of several possible backends.
 
 Currently the backend library options are Tensorflow, PyTorch, and JAX.
 
-In this lecture we will use JAX.
+In this lecture we will set the backend to JAX.
 
-The objective of this lecture is to provide a very simple introduction to deep
+Our main aim is to provide a very simple introduction to deep
 learning in a regression setting.
 
 Later, in [a separate lecture](https://jax.quantecon.org/jax_nn.html), we will investigate how to do the same learning task using pure JAX, rather than relying on Keras.
 
-We begin this lecture with some standard imports.
++++
 
-```{code-cell}
+If you run this lecture on [Google Colab](https://colab.research.google.com/), set the runtime environment to include a GPU.
+
+To run this lecture on your own machine, you need to install [Google JAX](https://github.com/google/jax).
+
+* Obviously, if you install the CPU-only version of JAX, you will not get the benefit of a hardware accelerator and this will affect your timings.
+
++++
+
+If necessary, please install Keras by uncommenting the next line.
+
+```{code-cell} ipython3
 :hide-output: false
 
-import numpy as np
-import matplotlib.pyplot as plt
-```
-
-Let’s install Keras.
-
-```{code-cell}
-:hide-output: false
-
-!pip install keras
+#!pip install --upgrade keras
 ```
 
 Now we specify that the desired backend is JAX.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import os
@@ -69,14 +65,28 @@ os.environ['KERAS_BACKEND'] = 'jax'
 
 Now we should be able to import some tools from Keras.
 
-(Without setting the backend to JAX, these imports might fail – unless you have PyTorch or Tensorflow set up.)
+(Without setting the backend to JAX, the imports below might fail – unless you have PyTorch or Tensorflow set up.  If you have problems running the next cell in Jupyter, try quitting, running `export KERAS_BACKEND="jax"` and then starting Jupyter on the command line from the same terminal.)
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import keras
+```
+
+```{code-cell} ipython3
+:hide-output: false
+
 from keras import Sequential
 from keras.layers import Dense
+```
+
+We'll also use the following imports.
+
+```{code-cell} ipython3
+:hide-output: false
+
+import numpy as np
+import matplotlib.pyplot as plt
 ```
 
 ## Data
@@ -100,7 +110,7 @@ where
 Here’s the function that creates vectors `x` and `y` according to the rule
 above.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def generate_data(x_min=0,           # Minimum x value
@@ -119,7 +129,7 @@ def generate_data(x_min=0,           # Minimum x value
 
 Now we generate some data to train the model.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x, y = generate_data()
@@ -127,7 +137,7 @@ x, y = generate_data()
 
 Here’s a plot of the training data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -139,7 +149,7 @@ plt.show()
 
 We’ll also use data from the same process for cross-validation.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x_validate, y_validate = generate_data()
@@ -161,7 +171,7 @@ to a single dimension (since the prediction is real-valued).
 The object `model` will be an instance of `keras.Sequential`, which is used to
 group a stack of layers into a single prediction model.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def build_regression_model():
@@ -189,10 +199,10 @@ MSE is the standard loss function for ordinary least squares regression.
 
 ### Deep Network
 
-The second function creates a dense (i.e., fully connected) neural network with
+The next function creates a dense (i.e., fully connected) neural network with
 3 hidden layers, where each hidden layer maps to a k-dimensional output space.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def build_nn_model(output_dim=10, num_layers=3, activation_function='tanh'):
@@ -217,11 +227,18 @@ training process.
 Initially the MSE will be relatively high, but it should fall at each iteration,
 as the parameters are adjusted to better fit the data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def plot_loss_history(training_history, ax):
-    # Plot MSE of training data against epoch
+    """
+    Plot the MSE of the training data as a function of the epochs.  
+    Each epoch corresponds to one pass through the data set and update of
+    the parameters.
+
+    This function acts on the training history returned by a call to the
+    `fit` method of a given model.
+    """
     epochs = training_history.epoch
     ax.plot(epochs, 
             np.array(training_history.history['loss']), 
@@ -246,7 +263,7 @@ Now let’s go ahead and train our  models.
 
 We’ll start with linear regression.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 regression_model = build_regression_model()
@@ -254,7 +271,7 @@ regression_model = build_regression_model()
 
 Now we train the model using the training data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 training_history = regression_model.fit(
@@ -264,7 +281,7 @@ training_history = regression_model.fit(
 
 Let’s have a look at the evolution of MSE as the model is trained.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -274,7 +291,7 @@ plt.show()
 
 Let’s print the final MSE on the cross-validation data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print("Testing loss on the validation set.")
@@ -283,7 +300,7 @@ regression_model.evaluate(x_validate, y_validate, verbose=2)
 
 Here’s our output predictions on the cross-validation data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 y_predict = regression_model.predict(x_validate, verbose=2)
@@ -291,7 +308,7 @@ y_predict = regression_model.predict(x_validate, verbose=2)
 
 We use the following function to plot our predictions along with the data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def plot_results(x, y, y_predict, ax):
@@ -303,7 +320,7 @@ def plot_results(x, y, y_predict, ax):
 
 Let’s now call the function on the cross-validation data.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -317,13 +334,13 @@ Now let’s switch to a neural network with multiple layers.
 
 We implement the same steps as before.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 nn_model = build_nn_model()
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 training_history = nn_model.fit(
@@ -331,7 +348,7 @@ training_history = nn_model.fit(
     epochs=2000, validation_data=(x_validate, y_validate))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -341,7 +358,7 @@ plt.show()
 
 Here’s the final MSE for the deep learning model.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print("Testing loss on the validation set.")
@@ -353,13 +370,13 @@ linear regression, suggesting a better fit.
 
 To confirm this, let’s look at the fitted function.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 y_predict = nn_model.predict(x_validate, verbose=2)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def plot_results(x, y, y_predict, ax):
@@ -369,7 +386,7 @@ def plot_results(x, y, y_predict, ax):
     ax.set_ylabel('y')
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
