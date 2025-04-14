@@ -173,3 +173,75 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# LaTeX temporary files
+*.aux
+*.log
+*.toc
+*.lof
+*.lot
+*.fls
+*.out
+*.dvi
+*.xdv
+*.synctex.gz
+*.synctex(busy)
+*.pdfsync
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.fdb_latexmk
+*.nav
+*.snm
+*.vrb
+*.pre
+*.idx
+*.ilg
+*.ind
+*.glo
+*.gls
+*.glg
+*.acn
+*.acr
+*.alg
+*.nlo
+*.nls
+*.brf
+*.tdo
+*.sty~
+*.cls~
+*.tex~
+
+# BibTeX
+*.bib.bak
+*.bib~
+
+# Build directories
+_minted*/
+build/
+output/
+
+# PDF files (uncomment if you don't want to track PDFs)
+# *.pdf
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Latexmk specific
+.latexmkrc
+
+# Specific to some LaTeX workflows
+auto/
+*.ptc
+*.listing

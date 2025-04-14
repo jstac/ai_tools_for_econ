@@ -1,44 +1,11 @@
-% JAX PyTree TikZ Diagram with Pygments Syntax Highlighting
-% To use this in your LaTeX document:
-% 1. Ensure you have the required packages in your preamble: tikz, minted, varwidth
-% 2. Load TikZ libraries: shapes, arrows, positioning, fit, backgrounds, calc
-% 3. Define the colors and minted settings in your preamble
-% 4. Place this code inside a figure environment
-
-% Required packages for your preamble:
-% \usepackage{tikz}
-% \usepackage{minted}
-% \usepackage{varwidth}
-% \usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc}
-
-% Color definitions for your preamble:
-% \definecolor{containerblue}{RGB}{66, 133, 244}
-% \definecolor{leafgreen}{RGB}{52, 168, 83}
-% \definecolor{textgray}{RGB}{51, 51, 51}
-% \definecolor{backgroundgray}{RGB}{248, 249, 250}
-% \definecolor{codebg}{RGB}{241, 241, 241}
-
-% Minted settings for your preamble:
-% \setminted[python]{
-%   fontsize=\small,
-%   baselinestretch=1.2,
-%   bgcolor=codebg,
-%   linenos=false,
-%   breaklines=true,
-%   frame=none
-% }
-
-% Place the following code in your document inside a figure environment:
-% \begin{figure}
-%   \centering
-%   ... code below ...
-%   \caption{JAX PyTree Structure Visualization}
-%   \label{fig:jax-pytree}
-% \end{figure}
 
 \begin{tikzpicture}[
     % Node styles
-    container/.style={draw=containerblue!70!black, fill=containerblue, rounded corners=3pt, minimum width=3cm, minimum height=1cm, text=white, font=\sffamily\bfseries},
+    container/.style={draw=containerblue!70!black, 
+        fill=containerblue, 
+        rounded corners=3pt, 
+        minimum width=3cm, 
+        minimum height=1cm, text=white, font=\sffamily\bfseries},
     leaf/.style={draw=leafgreen!70!black, fill=leafgreen, rounded corners=3pt, minimum width=2cm, minimum height=1cm, text=white, font=\sffamily\bfseries},
     label/.style={font=\sffamily\small, text=textgray},
     level distance=2cm,
@@ -113,7 +80,5 @@ pytree = {
 \node[leaf, minimum width=1cm, minimum height=0.6cm] (legend2) at (-7,-6) {};
 \node[text=textgray, font=\sffamily, anchor=west] at (-6.5,-6) {Leaf nodes (arrays, scalars)};
 
-% Additional explanation
-\node[text=textgray, font=\sffamily\bfseries, align=center] at (0,-4.5) {JAX PyTrees: Nested containers with leaves as arrays or scalars};
 
 \end{tikzpicture}

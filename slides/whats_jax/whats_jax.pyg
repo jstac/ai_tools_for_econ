@@ -1,0 +1,13 @@
+# Apply gradient updates to all parameters
+def sgd_update(params, grads, learning_rate):
+    return jax.tree_map(
+        lambda p, g: p - learning_rate * g,
+        params,
+        grads
+    )
+
+# Calculate gradients (PyTree with same structure as params)
+grads = jax.grad(loss_fn)(params, inputs, targets)
+
+# Update all parameters at once
+updated_params = sgd_update(params, grads, 0.01)
