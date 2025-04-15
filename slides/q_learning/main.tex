@@ -1,0 +1,804 @@
+\documentclass[xcolor=dvipsnames]{beamer}  % for hardcopy add 'trans'
+
+\mode<presentation>
+{
+  \usetheme{Singapore}
+  % or ...
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+\usefonttheme{professionalfonts}
+%\usepackage[english]{babel}
+% or whatever
+%\usepackage[latin1]{inputenc}
+% or whatever
+%\usepackage{times}
+%\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+%\usepackage{fontspec}
+%\setmonofont{Consolas}
+%\setmathfont{Asana Math}
+%\setmainfont{DejaVu Sans}
+%\setsansfont{DejaVu Sans}
+%\setmathfont{Consolas}
+%\setmathfont{Asana Math}
+%\setmonofont{DejaVu Sans Mono}
+%\setmonofont{Source Code Pro}
+
+%\usefonttheme{professionalfonts}
+%\usepackage{unicode-math}
+
+%%%%%%%%%%%%%%%%%%%%%% start my preamble %%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\insertnavigation}[1]{}
+
+%\pgfplotsset{compat=1.16}
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+\setbeamercolor{footline}{fg=blue}
+\setbeamerfont{footline}{series=\bfseries}
+
+\hypersetup{
+    linkcolor=blue,
+    colorlinks=true,
+    filecolor=magenta,      % color of file links
+    urlcolor=blue           % color of external links
+}
+
+
+%\pgfdeclareimage[height=1.0cm]{university-logo}{../qe-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+%\addtobeamertemplate{headline}{}
+%{%
+%\begin{flushright}
+%\begin{tikzpicture}[remember picture,overlay]
+%\node [left ]{\includegraphics[width=0.5cm]{../tuxswatter2.png}};
+%\end{tikzpicture}
+%\end{flushright}
+%\vskip -0.1cm
+%} 
+
+
+
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+
+\usepackage{fancyvrb}
+
+\usepackage{hyperref}
+
+% fonts, caligraphic
+%\usepackage{mathpazo}
+%\usepackage{mathrsfs}
+\usepackage{stix}
+\usepackage{bbm}
+
+% tikz
+\usepackage{tikz}
+\usepackage{tkz-graph}
+\usepackage{tikz-cd}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{calc}
+\usetikzlibrary{intersections}
+\usetikzlibrary{decorations}
+\usepackage{pgf}
+%\usepackage{pgfplots}
+
+
+
+\usepackage{graphviz}
+
+%\usepackage[usenames, dvipsnames]{color}
+
+
+% nice inequalities
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+
+\setlength{\parskip}{1.5ex plus0.5ex minus0.5ex}
+\setlength{\jot}{12pt} 
+
+\usepackage[lined]{algorithm2e}
+
+
+\definecolor{pale}{RGB}{235, 235, 235}
+\definecolor{pale2}{RGB}{175,238,238}
+\definecolor{turquois4}{RGB}{0,134,139}
+\definecolor{DarkOrange1}{RGB}{255,127,0}
+
+\newcommand{\emp}[1]{\textcolor{DarkOrange1}{\bf #1}}
+\newcommand{\newtopic}[1]{\textcolor{Green}{\Large \bf #1}}
+\newcommand{\navy}[1]{\textcolor{blue}{\bf #1}}
+\newcommand{\blue}[1]{\textcolor{turquois4}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+% Minted
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\usepackage{minted}
+\usemintedstyle{friendly}
+\newminted{python}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+\newminted{ipython}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+\newminted{julia}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+\newminted{c}{mathescape,frame=lines,framesep=4mm,bgcolor=bg}
+\renewcommand{\theFancyVerbLine}{\sffamily
+    \textcolor[rgb]{0.5,0.5,1.0}{\scriptsize {\arabic{FancyVerbLine}}}}
+
+\newcommand{\ess}{ \textrm{{\sc ess}} }
+\newcommand{\tss}{ \textrm{{\sc tss}} }
+\newcommand{\ssr}{ \textrm{{\sc ssr}} }
+
+\newcommand{\Fact}{\textcolor{Brown}{\bf Fact. }}
+\newcommand{\Facts}{\textcolor{Brown}{\bf Facts }}
+\newcommand{\keya}{\textcolor{turquois4}{\bf Key Idea. }}
+\newcommand{\Factnodot}{\textcolor{Brown}{\bf Fact }}
+\newcommand{\Eg}{\textcolor{ForestGreen}{Example. }}
+\newcommand{\Egs}{\textcolor{ForestGreen}{Examples. }}
+\newcommand{\Ex}{{\bf Ex. }}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+
+\DeclareMathOperator{\cl}{cl}
+\DeclareMathOperator{\gr}{gr}
+\DeclareMathOperator{\interior}{int}
+\DeclareMathOperator{\Prob}{Prob}
+\DeclareMathOperator{\kernel}{ker}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\determinant}{det}
+\DeclareMathOperator{\trace}{trace}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\corr}{corr}
+\DeclareMathOperator{\range}{rng}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\mse}{mse}
+\DeclareMathOperator{\se}{se}
+\DeclareMathOperator{\row}{row}
+\DeclareMathOperator{\col}{col}
+\DeclareMathOperator{\dimension}{dim}
+\DeclareMathOperator{\fracpart}{frac}
+\DeclareMathOperator{\proj}{proj}
+
+% mics short cuts and symbols
+\newcommand{\st}{\ensuremath{\ \mathrm{s.t.}\ }}
+\newcommand{\setntn}[2]{ \{ #1 : #2 \} }
+\newcommand{\cf}[1]{ \lstinline|#1| }
+\newcommand{\fore}{\therefore \quad}
+\newcommand{\tod}{\stackrel { d } {\to} }
+\newcommand{\toprob}{\stackrel { p } {\to} }
+\newcommand{\toms}{\stackrel { ms } {\to} }
+\newcommand{\eqdist}{\stackrel {\mathscr{D}}{=} }
+\newcommand{\iidsim}{\stackrel {\textrm{ {\sc iid }}} {\sim} }
+\newcommand{\1}{\mathbbm 1}
+\newcommand{\given}{\, | \,}
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+\newcommand{\lra}{\leftrightarrow}
+
+\providecommand{\inner}[1]{\left\langle{#1}\right\rangle}
+
+% d for integrals
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+
+\newcommand{\RR}{\mathbbm R}
+\newcommand{\NN}{\mathbbm N}
+\newcommand{\PP}{\mathbbm P}
+\newcommand{\DD}{\mathbbm D}
+\newcommand{\EE}{\mathbbm E}
+\newcommand{\GG}{\mathbbm G}
+\newcommand{\WW}{\mathbbm W}
+\newcommand{\ZZ}{\mathbbm Z}
+\newcommand{\QQ}{\mathbbm Q}
+
+
+\newcommand{\XX}{\mathsf X}
+\newcommand{\YY}{\mathsf Y}
+
+\newcommand{\fF}{\mathscr F}
+\newcommand{\sS}{\mathscr S}
+\newcommand{\jJ}{\mathscr J}
+\newcommand{\cC}{\mathscr C}
+\newcommand{\aA}{\mathscr A}
+\newcommand{\bB}{\mathscr B}
+\newcommand{\gG}{\mathscr G}
+\newcommand{\hH}{\mathcal H}
+\newcommand{\nN}{\mathscr N}
+\newcommand{\dD}{\mathscr D}
+\newcommand{\oO}{\mathscr O}
+\newcommand{\pP}{\mathscr P}
+\newcommand{\lL}{\mathscr L}
+
+\newcommand{\rR}{\mathcal R}
+\newcommand{\mM}{\mathcal M}
+
+
+
+
+
+
+
+\begin{document}
+
+%\begin{frame}
+%  \titlepage
+%\end{frame}
+
+
+\begin{frame}
+    
+    \begin{center}
+        \navy{\Large{Q-Learning}}
+
+        
+        \vspace{2em}
+        John Stachurski 
+
+        \vspace{1em}
+        \vspace{1em}
+        %\today{}
+        \texttt{Jan 2023}
+
+    \end{center}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Overview}
+    
+    \begin{itemize}
+        \item Q-factors
+            \vspace{0.5em}
+        \item Fixed point iteration
+            \vspace{0.5em}
+        \item Stochastic approximation
+            \vspace{0.5em}
+        \item Q-learning as stochastic approximation
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Q-factors}
+
+    Consider an MDP with Bellman equation
+    %
+    \begin{equation*}
+        v^*(x) = \max_{a \in \Gamma(x)}
+        \left\{
+            r(x,a) + \beta \sum_{x'} v^*(x') P(x,a,x')
+        \right\}
+    \end{equation*}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    The corresponding \navy{Q-factor} is the right-hand side
+    %
+    \begin{equation*}
+        q^*(x,a) = r(x,a) + \beta \sum_{x'} v^*(x') P(x,a,x')
+    \end{equation*}
+
+    Hence
+    %
+    \begin{equation*}
+        v^*(x)  = \max_{a \in \Gamma(x)} q^*(x,a)
+    \end{equation*}
+
+\end{frame}
+
+
+
+\begin{frame}
+    
+    Combining the last two equations gives
+    %
+    \begin{equation*}
+        q^*(x,a) 
+        = r(x, a) + \beta \sum_{x'} \max_{a' \in \Gamma(x')} q^*(x',a')
+            P(x,a,x')
+    \end{equation*}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    We can use this to solve for $q^*$ and the obtain $v^*$ via
+    %
+    \begin{equation*}
+        v^*(x)  = \max_{a \in \Gamma(x)} q^*(x,a)
+    \end{equation*}
+    
+
+\end{frame}
+
+\begin{frame}
+
+    To repeat,
+    %
+    \begin{equation*}
+        q^*(x,a) 
+        = r(x, a) 
+            + \beta \sum_{x'} \max_{a' \in \Gamma(x')} q^*(x',a')P(x,a,x')
+    \end{equation*}
+
+    Hence $q^*$ is the fixed point of
+    %
+    \begin{equation*}
+        (S q)(x,a)
+        =  r(x, a) 
+            + \beta \sum_{x'} \max_{a' \in \Gamma(x')} q(x',a')P(x,a,x')
+    \end{equation*}
+
+
+    Remarks
+    %
+    \begin{itemize}
+        \item unlike the Bellman equation for $v^*$, the expectation is
+            \underline{outside} the max
+    \vspace{0.5em}
+        \item this helps with stochastic approximation
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Note that
+    %
+    \begin{align*}
+        |(S f)(x,a) & - (S g)(x,a)|
+        \\
+        & \leq \beta
+        \left|
+            \sum_{x'} \max_{a' \in \Gamma(x')} f(x',a')
+            - \sum_{x'} \max_{a' \in \Gamma(x')} g(x',a')
+        \right| P(x,a,x')
+        \\
+        & = \beta
+            \sum_{x'}
+            \max_{a' \in \Gamma(x')}
+        \left|
+              f(x',a')
+            -  g(x',a')
+        \right| P(x,a,x')
+    \end{align*}
+
+    \begin{equation*}
+        \fore
+        |(S f)(x,a) - (S g)(x,a)|
+        \leq \beta \| f - g\|_\infty
+    \end{equation*}
+
+    \begin{equation*}
+        \fore
+        \|S f - S g\| \leq \beta \| f - g\|_\infty
+    \end{equation*}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Fixed point iteration}
+
+    Let 
+    %
+    \begin{itemize}
+        \item $T \colon \Theta \to \Theta$ be a contraction map of modulus $\beta$
+        \item $\Theta$ be a closed subset of $\RR^n$
+    \end{itemize}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    We know that $T^k \theta \to \bar \theta$ as $k \to \infty$ where $\bar
+    \theta$ is the
+    unique fixed point
+
+    \vspace{0.5em}
+    Alternatively, we can iterate on the damped sequence
+    %
+    \begin{align*}
+        \theta_{k+1} 
+        & = (1-\alpha) \theta_k + \alpha T \theta_k
+        \\
+        & =  \theta_k + \alpha (T \theta_k - \theta_k)
+    \end{align*}
+
+    \begin{itemize}
+        \item $\alpha \in (0,1)$
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    To see that the damped sequence converges, let
+    %
+    \begin{equation*}
+        F\theta = \theta + \alpha (T\theta - \theta)
+    \end{equation*}
+
+    Then
+    %
+    \begin{equation*}
+        F \bar \theta 
+        = \bar \theta + \alpha (T \bar \theta - \bar \theta)
+        = \bar \theta
+    \end{equation*}
+
+    and
+
+    \begin{equation*}
+        \| F\theta - F\theta'\|
+        \leq (1-\alpha)\|\theta - \theta'\| + \alpha \| T\theta - T\theta'\|
+        \leq (1-\alpha + \alpha \beta)\| \theta - \theta'\|
+    \end{equation*}
+
+    Note 
+    %
+    \begin{equation*}
+        1-\alpha + \alpha \beta < 1
+        \iff \beta < 1
+    \end{equation*}
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Stochastic Approximation}
+
+    Suppose $T$ is a map with fixed point $\bar \theta = T \bar \theta$
+
+    We can only evaluate $T$ with noise:
+    %
+    \begin{center}
+        input $\theta$ and receive $T \theta + W$ 
+    \end{center}
+
+    \begin{itemize}
+        \item $(W_k)$ is a random (vector-valued) sequence 
+        \item We cannot observe $W_k$, only $T \theta + W_k$
+    \end{itemize}
+
+    Robbins--Monro algorithm to compute the fixed point $\bar \theta$:
+    %
+    \begin{equation*}
+        \theta_{k+1} 
+        = \theta_k + \alpha_k [ T \theta_k + W_k - \theta_k ]
+    \end{equation*}
+
+    \begin{itemize}
+        \item $(\alpha_k)$ is a sequence in $(0,1)$
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Side-by-side comparison:
+
+    \vspace{1em}
+
+    Here's damped iteration:
+
+    \begin{equation*}
+        \theta_{k+1} = (1-\alpha) \theta_k + \alpha T \theta_k
+    \end{equation*}
+
+    \vspace{1em}
+    \vspace{1em}
+
+    This is Robbins--Monro 
+    %
+    \begin{equation*}
+        \theta_{k+1} 
+        = \theta_k + \alpha_k [ T \theta_k + W_k - \theta_k ]
+    \end{equation*}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    By our earlier analysis, $\theta_k \to \bar \theta$ if $W_k \equiv 0$ and
+    $\alpha_k \equiv \alpha$
+
+    \vspace{0.5em}
+    More generally, \cite{tsitsiklis1994asynchronous} proves that if:
+    %
+    \begin{itemize}
+        \item $T$ is an order-preserving contraction map with fixed
+            point $\bar \theta$
+            \vspace{0.5em}
+        \item $\EE [W_{k+1} \given \fF_k] = 0$ for all $k \geq 0$
+            \vspace{0.5em}
+        \item $\sum_{k \geq 0} \alpha_k = \infty$ and $\sum_{k \geq 0} \alpha_k^2 < \infty$
+            \vspace{0.5em}
+        \item some other technical assumptions,
+    \end{itemize}
+    %
+    then 
+    %
+    \begin{center}
+        $\theta_k \to \bar \theta$ with probability one
+    \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Q-Learning}
+
+    The Q-learning algorithm \cite{watkins1989learning} proposes to learn the Q-factor of an MDP
+    via
+    %
+    \begin{equation*}
+        q_{k+1}(x,a) 
+        = q_k(x,a) + \alpha_k 
+        \left[
+            r(x,a) + \beta \max_{a' \in \Gamma(X')} q_k(X', a')
+            - q_k(x,a)
+        \right]
+    \end{equation*}
+    %
+    where $X' \sim P(x, a, \cdot)$
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+    {\bf Thm.} Under some assumptions, 
+    %
+    \begin{equation*}
+        \PP
+        \left\{
+            \lim_{k \to \infty}
+            q_k = q^*
+        \right\} = 1
+    \end{equation*}
+
+    Proved by \cite{tsitsiklis1994asynchronous}, \cite{watkins1992q}
+
+\end{frame}
+
+\begin{frame}
+
+    We sketch the proof of \cite{tsitsiklis1994asynchronous}
+    
+            \vspace{0.5em}
+    Let
+    %
+    \begin{equation*}
+        W_k 
+        := \beta \max_{a' \in \Gamma(X')} q_k(X', a') 
+        - \beta \, \EE \max_{a' \in \Gamma(X')} q_k(X', a')
+    \end{equation*}
+    %
+    and recall that
+    %
+    \begin{equation*}
+        (S q)(x,a)
+        =  r(x, a) + \beta \,\EE \max_{a' \in \Gamma(X')} q(X',a')
+    \end{equation*}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+    Alternatively,
+    %
+    %
+    \begin{equation*}
+        (S q)(x,a)
+        =  r(x, a) + \beta \max_{a' \in \Gamma(X')} q(X',a') - W_k
+    \end{equation*}
+
+\end{frame}
+
+\begin{frame}
+
+    In summary,
+    % 
+    \begin{equation*}
+        q_{k+1} 
+        = q_k + \alpha_k 
+        \left[
+            r + \beta \max_{a' \in \Gamma(X')} q_k(X', a')
+            - q_k
+        \right]
+    \end{equation*}
+    %
+    and
+    %
+    \begin{equation*}
+          S q_k + W_k
+        = r + \beta \max_{a' \in \Gamma(X')} q_k(X', a')
+    \end{equation*}
+
+    \begin{equation*}
+        \fore
+        q_{k+1} 
+        = q_k + \alpha_k 
+        \left[
+            S q_k + W_k - q_k
+        \right]
+    \end{equation*}
+
+\end{frame}
+
+\begin{frame}
+    
+    To repeat,
+    %
+    \begin{equation*}
+        q_{k+1} 
+        = q_k + \alpha_k 
+        \left[
+            S q_k + W_k - q_k
+        \right]
+    \end{equation*}
+    %
+    with
+    %
+    \begin{equation*}
+        \EE W_k 
+        = \EE 
+        \left[ 
+            \beta \max_{a' \in \Gamma(X')} q_k(X', a') 
+            - \beta \, \EE \max_{a' \in \Gamma(X')} q_k(X', a')
+        \right] = 0
+    \end{equation*}
+
+    This is the Robbins--Monro algorithm applied to computing the fixed point
+    of $S$
+
+    \begin{itemize}
+        \item The fixed point of $S$ is the Q-factor $q^*$
+    \end{itemize}
+            \vspace{0.5em}
+            \vspace{0.5em}
+
+    Hence, under certain assumptions, $q_k \to q^*$ with probability one
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Online Q-Learning} 
+
+    We analyzed the Q-learning routine
+    %
+    \begin{equation*}
+        q_{k+1}(x,a) 
+        = q_k(x,a) + \alpha_k 
+        \left[
+            r(x,a) + \beta \max_{a' \in \Gamma(X')} q_k(X', a')
+            - q_k(x,a)
+        \right]
+    \end{equation*}
+    %
+    where $X' \sim P(x, a, \cdot)$
+
+    This is an example of \navy{offline} learning
+
+    \begin{itemize}
+        \item update $q_{k+1}$ at every $(x,a)$
+    \end{itemize}
+
+    An alternative is \navy{online} learning
+
+    \begin{itemize}
+        \item update along a sequence
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    
+    Let $(X_t, A_t)$ be a state-action sequence
+
+    \begin{itemize}
+        \item $X_{t+1} \sim P(X_t, A_t, \cdot)$ for all $t \geq 0$
+        \vspace{0.5em}
+        \item $R_t := r(X_t, A_t)$ for all $t \geq 0$
+    \end{itemize}
+    %
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+
+    Update via
+    %
+    \begin{multline*}
+        q_{t+1}(X_t, A_t) =
+        \\
+        q_t(X_t, A_t) + \alpha_t 
+        \left[
+            R_t + \beta \max_{a' \in \Gamma(X_{t+1})} q_t(X_{t+1}, a')
+            - q_t(X_t, A_t)
+        \right]
+    \end{multline*}
+
+    \begin{itemize}
+        \item Can learn online without knowing $r$ or $P$
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Q-Learning for Optimal Stopping}
+
+    Consider an optimal stopping problem with Bellman equation
+    %
+    \begin{equation*}
+        v^*(x) = \max_a
+        \left\{
+            a e(x) + (1-a)
+            \left[ 
+                c(x) + \beta \sum_{x'} v^*(x')P(x,x')
+            \right]
+        \right\}
+    \end{equation*}
+
+    \begin{itemize}
+        \item $a \in \{0, 1\}$ stands for ``reject'', ``accept''
+    \end{itemize}
+
+    Let
+    %
+    \begin{equation*}
+        q^*(x,a) =
+            a e(x) + (1-a)
+            \left[ 
+                c(x) + \beta \sum_{x'} v^*(x')P(x,x')
+            \right]
+    \end{equation*}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Now rearrange the Bellman equation and elminate $v^*$ to get
+    %
+    \begin{equation*}
+        q^*(x,a) =
+            a e(x) + (1-a)
+            \left[ 
+                c(x) + \beta \sum_{x'} \max_{a'}  q^*(x', a')P(x,x')
+            \right]
+    \end{equation*}
+
+    Alternatively, $q^* = S q^*$ where
+
+    %
+    \begin{equation*}
+        (Sq)(x,a) =
+            a e(x) + (1-a)
+            \left[ 
+                c(x) + \beta \sum_{x'} \max_{a'}  q(x', a')P(x,x')
+            \right]
+    \end{equation*}
+
+    Finally, apply Q-learning with this version of $S$
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+    \frametitle{References}
+
+    \bibliographystyle{amsalpha}
+
+    \bibliography{main.bib}
+
+\end{frame}
+
+
+\end{document}
