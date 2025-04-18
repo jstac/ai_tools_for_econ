@@ -93,7 +93,7 @@ We have
 $$
 \begin{aligned}
     \mathbb E (\hat Tv)(x) 
-    & = \sum_{x'} [m(x')v(x') + d(x')] P(x, x')
+    & = \sum_{x'} m(x')[v(x') + d(x')] P(x, x')
     \\
     & = (Tv)(x)
 \end{aligned}
@@ -131,6 +131,8 @@ from numba import jit
 import matplotlib.pyplot as plt
 ```
 
+### Linear algebra solution
+
 ```{code-cell} ipython3
 def test_stability(Q):
     """
@@ -142,11 +144,13 @@ def test_stability(Q):
 
 # == fix parameters == #
 
-n = 10
-ρ = 0.9
-σ = 0.02
-β = 0.96
-γ = 2.0
+n = 10   # size of state space
+ρ = 0.9  # autocorrelation of state proces
+σ = 0.02 # volatility of state process
+β = 0.96 # discount factor
+γ = 2.0  # utility parameter
+
+# Set up Markov chain
 mc = qe.tauchen(n, ρ, σ)
 P = mc.P
 states = mc.state_values
@@ -155,27 +159,44 @@ states = mc.state_values
 
 # Compute the matrix K
 K = β * P * np.exp((1 - γ) * states)
-
 # Make sure that a unique solution exists
 test_stability(K)
-
-# Compute v
+# Compute v_star
 I = np.identity(n)
-v_star = np.linalg.solve(I - K, K @ np.ones(n))
+b = K @ np.ones(n)
+v_star = np.linalg.solve(I - K, b)
+```
 
-# == solve using stochastic approximation == #
+```{code-cell} ipython3
+v_star
+```
 
+```{code-cell} ipython3
+
+fig, ax = plt.subplots()
+ax.plot(states, v_star, alpha=0.8, label='linear algebra solution $v^*$')
+ax.legend()
+plt.show()
+```
+
+### Stochastic approximation solution
+
+```{code-cell} ipython3
+# For efficiency, pre-compute cdf representation of P
 P_cdf = np.cumsum(P, axis=1)
 
 @jit
-def compute_fixed_point_sa(series_length=1_000_000):
+def compute_fixed_point_sa(num_iter=1_000_000):
+    """
+    Compute fixed point using stochastic approximation.
+    """
     v = np.zeros(n)
     new_v = np.empty_like(v)
-    for k in range(series_length):
+    for k in range(num_iter):
         alpha = (k + 1)**(-0.55)
         for i in range(n):
             j = qe.random.draw(P_cdf[i, :])  # an index draw from P[i, :]
-            Y = states[j]  # the update state
+            Y = states[j]                    # the update state
             hat_Tv = β * np.exp((1 - γ) * Y) * (v[j] + 1)
             new_v[i] = v[i] + alpha * (hat_Tv - v[i])
         error = np.max(np.abs(new_v - v))
@@ -183,7 +204,7 @@ def compute_fixed_point_sa(series_length=1_000_000):
     return v
 ```
 
-Now let's compute the two solutions and compare them.
+Now let's compare the two solutions.
 
 ```{code-cell} ipython3
 v_sa = compute_fixed_point_sa()
@@ -257,6 +278,10 @@ ax.plot(states, v_sa, lw=2, alpha=0.8, ls='dashed',
         label='stochastic approx')
 ax.legend()
 plt.show()
+```
+
+```{code-cell} ipython3
+
 ```
 
 ```{code-cell} ipython3
