@@ -4,16 +4,17 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.2
+    jupytext_version: 1.16.7
 kernelspec:
-  display_name: Python 3 (ipykernel)
-  language: python
+  display_name: Python
+  language: python3
   name: python3
 ---
 
 # Neural Network Regression with JAX and Optax
 
 +++
+
 
 # Introduction
 
@@ -34,7 +35,7 @@ The lecture proceeds in three stages:
 
 We begin with imports and installs.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 import numpy as np
@@ -45,27 +46,25 @@ import os
 from time import time
 ```
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
-# !pip install keras  # Uncomment if not installed
+!pip install keras
 ```
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
-# !pip install optax  # Uncomment if not installed
+!pip install optax
 ```
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 os.environ['KERAS_BACKEND'] = 'jax'
 ```
 
-(Without setting the backend to JAX, the imports below might fail – unless you have PyTorch or Tensorflow set up. If you have problems running the next cell in Jupyter, try quitting, running export KERAS_BACKEND="jax" and then starting Jupyter on the command line from the same terminal.)
-
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 import keras
@@ -79,7 +78,7 @@ import optax
 Let’s hardcode some of the learning-related constants we’ll use across all
 implementations.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 EPOCHS = 4000           # Number of passes through the data set
@@ -91,7 +90,7 @@ LEARNING_RATE = 0.001   # Learning rate for gradient descent
 
 The next piece of code is repeated from our Keras lecture and generates the data.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def generate_data(x_min=0,           
@@ -115,7 +114,7 @@ The code is essentially the same, although written slightly more succinctly.
 
 Here is a function to build the model.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def build_keras_model(num_layers=NUM_LAYERS, 
@@ -139,7 +138,7 @@ def build_keras_model(num_layers=NUM_LAYERS,
 
 Here is a function to train the model.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def train_keras_model(model, x, y, x_validate, y_validate):
@@ -160,7 +159,7 @@ def train_keras_model(model, x, y, x_validate, y_validate):
 
 The next function visualizes the prediction.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def plot_keras_output(model, x, y, x_validate, y_validate):
@@ -175,7 +174,7 @@ def plot_keras_output(model, x, y, x_validate, y_validate):
 
 Here’s a function to run all the routines above.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def keras_run_all():
@@ -190,7 +189,7 @@ def keras_run_all():
 
 Let’s put it to work:
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 keras_run_all()
@@ -247,7 +246,7 @@ Here’s a function to initialize parameters.
 
 The parameter “vector” `θ`  will be stored as a list of dicts.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def initialize_params(seed=1234):
@@ -287,7 +286,7 @@ Actually we don’t need to, as will become clear below.
 
 Here’s our implementation of $ f $:
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 @jax.jit
@@ -311,7 +310,7 @@ corresponding  to each data point.
 
 The loss function is mean squared error, the same as the Keras case.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 @jax.jit
@@ -328,7 +327,7 @@ evaluate the gradient.)
 
 The gradient below is with respect to the first argument `θ`.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 loss_gradient = jax.jit(jax.grad(loss_fn))
@@ -346,7 +345,7 @@ The JAX function `grad` understands how to
 
 1. extract the individual arrays (the ``leaves’’ of the tree),  
 1. compute derivatives with respect to each one, and  
-1. pack the resulting derivatives into a pytree with the same structure as the parameter vector.
+1. pack the resulting derivatives into a pytree with the same structure as the parameter vector.  
 
 +++
 
@@ -357,7 +356,7 @@ algorithm we covered in our [lecture on autodiff](https://jax.quantecon.org/auto
 
 In this case, however, to keep things as simple as possible, we’ll use a fixed learning rate for every iteration.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 @jax.jit
@@ -368,20 +367,18 @@ def update_parameters(θ, x, y):
     return θ
 ```
 
-+++ {"hide-output": false}
-
 We are implementing the gradient descent update
 
-    new_params = current_params - learning_rate * gradient_of_loss_function
+```{code-cell}
+:hide-output: false
 
-+++
+    new_params = current_params - learning_rate * gradient_of_loss_function
+```
 
 This is nontrivial for a complex structure such as a neural network, so how is
 it done?
 
-The key line in the function above is 
-
-    Θ = jax.tree.map(lambda p, g: p - λ * g, θ, gradient)
+The key line in the function above is `Θ = jax.tree.map(lambda p, g: p - λ * g, θ, gradient)`.
 
 The `jax.tree.map` function understands `θ` and `gradient` as pytrees of the
 same structure and executes `p - λ * g` on the corresponding leaves of the pair
@@ -392,7 +389,7 @@ descent, exactly as required.
 
 Here’s code that puts this all together.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def train_jax_model(θ, x, y, x_validate, y_validate):
@@ -412,7 +409,7 @@ def train_jax_model(θ, x, y, x_validate, y_validate):
 
 Let’s run our code and see how it goes.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 θ = initialize_params()
@@ -420,7 +417,7 @@ x, y = generate_data()
 x_validate, y_validate = generate_data()
 ```
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 %%time 
@@ -432,7 +429,7 @@ x_validate, y_validate = generate_data()
 
 This figure shows MSE across iterations:
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -443,7 +440,7 @@ plt.show()
 
 Let’s check the final MSE on the validation data, at the estimated parameters.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 print(f"""
@@ -457,7 +454,7 @@ simple our implementation is.
 
 Here’s a visualization of the quality of our fit.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -482,7 +479,7 @@ One such library is [Optax](https://optax.readthedocs.io/en/latest/).
 
 Here’s a training routine using Optax’s stochastic gradient descent solver.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def train_jax_optax(θ, x, y):
@@ -497,7 +494,7 @@ def train_jax_optax(θ, x, y):
 
 Let’s try running it.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 # Reset parameter vector
@@ -508,7 +505,7 @@ Let’s try running it.
 
 The resulting MSE is the same as our hand-coded routine.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 print(f"""
@@ -518,7 +515,7 @@ Final MSE on test data set = {loss_fn(θ, x_validate, y_validate)}.
 )
 ```
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -537,7 +534,7 @@ such as [ADAM](https://arxiv.org/pdf/1412.6980).
 
 You will notice that the syntax for using this alternative optimizer is very similar.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 def train_jax_optax(θ, x, y):
@@ -550,7 +547,7 @@ def train_jax_optax(θ, x, y):
     return θ
 ```
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 # Reset parameter vector
@@ -561,7 +558,7 @@ def train_jax_optax(θ, x, y):
 
 Here’s the MSE.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 print(f"""
@@ -573,7 +570,7 @@ Final MSE on test data set = {loss_fn(θ, x_validate, y_validate)}.
 
 Here’s a visualization of the result.
 
-```{code-cell} ipython3
+```{code-cell}
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -583,8 +580,4 @@ ax.plot(x.flatten(), f(θ, x).flatten(),
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 plt.show()
-```
-
-```{code-cell} ipython3
-
 ```
