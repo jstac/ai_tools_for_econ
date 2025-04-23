@@ -1,13 +1,6 @@
 """
-Nonlinear Regression with Neural Networks using JAX and Optax
+Nonlinear regression with neural networks using JAX and Optax.
 
-This code demonstrates using neural networks to solve a nonlinear regression problem
-with JAX and Optax. It includes:
-- Data generation with complex nonlinear patterns
-- Model definition using a functional approach
-- Parameter initialization and management
-- Training with mini-batches and learning rate scheduling
-- Model evaluation and visualization
 """
 
 import jax
@@ -20,12 +13,11 @@ from functools import partial
 
 # Set random seed for reproducibility
 SEED = 42
-key = jax.random.PRNGKey(SEED)
 
 # Configuration
 class Config:
     # Data parameters
-    data_size = 1000
+    data_size = 1_000
     train_ratio = 0.8
     noise_scale = 0.2
     
@@ -46,62 +38,65 @@ class Config:
     eval_every = 50
 
 
-# Data Generation
-def generate_data(key: jax.Array, 
-                  size: int = Config.data_size, 
-                  noise_scale: float = Config.noise_scale) -> Tuple[jnp.ndarray, jnp.ndarray]:
+@jax.jit
+def f(x):
+    """
+    Function to be estimated.
+    """
+    return jnp.sin(x) + 0.1 * x**2 + 0.5 * jnp.cos(3*x)
+    
+
+def generate_data(key: jax.Array) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """
     Generate synthetic nonlinear regression data.
-    
-    The target function is a complex nonlinear function:
-    y = sin(x) + 0.1 * x^2 + 0.5 * cos(3*x) + noise
     """
     key, subkey = jax.random.split(key)
     
-    # Generate x values between -3 and 3
-    x = jax.random.uniform(key, (size, 1), minval=-3.0, maxval=3.0)
-    
-    # Generate nonlinear target
-    y_clean = jnp.sin(x) + 0.1 * x**2 + 0.5 * jnp.cos(3*x)
-    
-    # Add noise
-    noise = jax.random.normal(subkey, shape=y_clean.shape) * noise_scale
-    y = y_clean + noise
-    
+    x = jax.random.uniform(
+            key, (Config.data_size, 1), minval=-3.0, maxval=3.0
+        )
+    σ =  Config.noise_scale
+    w = σ * jax.random.normal(subkey, shape=x.shape)
+    y = f(x) + w
     return x, y
 
 
 # Split data into training and validation sets
-def train_val_split(x: jnp.ndarray, 
-                    y: jnp.ndarray, 
-                    train_ratio: float = Config.train_ratio) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    """Split data into training and validation sets."""
+def train_val_split(
+        key: jax.Array,
+        x: jnp.ndarray, 
+        y: jnp.ndarray, 
+        train_ratio: float = Config.train_ratio
+    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+
+    """
+    Split data into training and validation sets.
+    """
     n = x.shape[0]
     indices = jnp.arange(n)
     train_size = int(n * train_ratio)
-    
     # Shuffle indices
     shuffled_indices = jax.random.permutation(key, indices)
     train_indices = shuffled_indices[:train_size]
     val_indices = shuffled_indices[train_size:]
-    
+    # Split data using indices    
     x_train, y_train = x[train_indices], y[train_indices]
     x_val, y_val = x[val_indices], y[val_indices]
-    
     return x_train, y_train, x_val, y_val
 
 
-# Model Definition
 class LayerParams(NamedTuple):
     """Parameters for a single neural network layer."""
     weights: jnp.ndarray
     bias: jnp.ndarray
 
 
-def init_layer_params(key: jax.Array, 
-                      in_dim: int, 
-                      out_dim: int,
-                      activation_name: str = Config.activation) -> Tuple[LayerParams, jax.Array]:
+def init_layer_params(
+        key: jax.Array, 
+        in_dim: int, 
+        out_dim: int,
+        activation_name: str = Config.activation
+    ) -> Tuple[LayerParams, jax.Array]:
     """
     Initialize parameters for a single layer using appropriate initialization
     based on the activation function.
@@ -109,6 +104,7 @@ def init_layer_params(key: jax.Array,
     - He initialization for ReLU and its variants
     - LeCun initialization for SELU
     - Glorot/Xavier initialization for tanh and sigmoid
+
     """
     key, w_key, b_key = jax.random.split(key, 3)
     
@@ -122,7 +118,9 @@ def init_layer_params(key: jax.Array,
     elif activation_name in ["tanh", "sigmoid"]:
         # Glorot/Xavier initialization
         scale = jnp.sqrt(6.0 / (in_dim + out_dim))
-        weights = jax.random.uniform(w_key, (in_dim, out_dim), minval=-scale, maxval=scale)
+        weights = jax.random.uniform(
+                w_key, (in_dim, out_dim), minval=-scale, maxval=scale
+            )
         bias = jnp.zeros((out_dim,))
     else:
         # He initialization (default for ReLU and variants)
@@ -134,9 +132,13 @@ def init_layer_params(key: jax.Array,
 
 
 def init_network_params(key: jax.Array, 
-                        layer_sizes: List[int],
-                        activation_name: str = Config.activation) -> List[LayerParams]:
-    """Initialize all parameters for the network."""
+        layer_sizes: List[int],
+        activation_name: str = Config.activation
+    ) -> List[LayerParams]:
+    """
+    Initialize all parameters for the network.
+
+    """
     params = []
     
     for i in range(len(layer_sizes) - 1):
@@ -151,31 +153,16 @@ def init_network_params(key: jax.Array,
     return params
 
 
-def get_activation_fn(activation_name: str) -> Callable:
-    """Get the activation function by name."""
-    activation_fns = {
-        "relu": jax.nn.relu,
-        "selu": jax.nn.selu,
-        "tanh": jnp.tanh,
-        "sigmoid": jax.nn.sigmoid,
-        "leaky_relu": jax.nn.leaky_relu,
-        "elu": jax.nn.elu,
-        "gelu": jax.nn.gelu,
-    }
-    
-    if activation_name not in activation_fns:
-        raise ValueError(f"Activation function '{activation_name}' not supported. "
-                         f"Choose from: {list(activation_fns.keys())}")
-    
-    return activation_fns[activation_name]
-
 
 @partial(jax.jit, static_argnames=['activation'])
-def forward(params: List[LayerParams], 
-            x: jnp.ndarray, 
-            *, 
-            activation: str = "relu") -> jnp.ndarray:
-    """Forward pass through the neural network.
+def forward(
+        params: List[LayerParams], 
+        x: jnp.ndarray, 
+        activation: str = "selu"
+    ) -> jnp.ndarray:
+
+    """
+    Forward pass through the neural network.
     
     Args:
         params: List of layer parameters
@@ -216,12 +203,18 @@ def forward(params: List[LayerParams],
 
 
 @partial(jax.jit, static_argnames=['activation'])
-def mse_loss(params: List[LayerParams], 
-             x: jnp.ndarray, 
-             y: jnp.ndarray,
-             *, 
-             activation: str = "relu") -> jnp.ndarray:
-    """Mean squared error loss function."""
+def mse_loss(
+        params: List[LayerParams], 
+        x: jnp.ndarray, 
+        y: jnp.ndarray,
+        *, 
+        activation: str = "relu"
+    ) -> jnp.ndarray:
+
+    """
+    Mean squared error loss function.
+
+    """
     y_pred = forward(params, x, activation=activation)
     return jnp.mean((y_pred - y) ** 2)
 
@@ -230,8 +223,7 @@ def mse_loss(params: List[LayerParams],
 def regularized_loss(params: List[LayerParams], 
                      x: jnp.ndarray, 
                      y: jnp.ndarray, 
-                     *, 
-                     activation: str = "relu",
+                     activation: str = "selu",
                      weight_decay: float = Config.weight_decay) -> jnp.ndarray:
     """Loss function with L2 regularization."""
     mse = mse_loss(params, x, y, activation=activation)
@@ -286,10 +278,12 @@ def create_train_step(optimizer, activation: str = "relu"):
     return train_step
 
 
-def create_data_batch_iterator(x: jnp.ndarray, 
-                              y: jnp.ndarray, 
-                              batch_size: int = Config.batch_size,
-                              key: jax.Array = None):
+def create_data_batch_iterator(
+        x: jnp.ndarray, 
+        y: jnp.ndarray, 
+        batch_size: int = Config.batch_size,
+        key: jax.Array = None
+    ):
     """Create a batched data iterator."""
     num_samples = x.shape[0]
     
@@ -321,7 +315,8 @@ def evaluate(params: List[LayerParams],
     return float(mse_loss(params, x, y, activation=activation))
 
 
-def plot_predictions(params: List[LayerParams],
+def plot_predictions(ax,
+                    params: List[LayerParams],
                     x_train: jnp.ndarray,
                     y_train: jnp.ndarray,
                     x_val: jnp.ndarray,
@@ -342,40 +337,42 @@ def plot_predictions(params: List[LayerParams],
     x_val_np = np.array(x_val).flatten()
     y_val_np = np.array(y_val).flatten()
     
-    # Create the plot
-    plt.figure(figsize=(10, 6))
-    
     # Plot training data
-    plt.scatter(x_train_np, y_train_np, alpha=0.5, color='blue', label='Training data')
-    
-    # Plot validation data
-    plt.scatter(x_val_np, y_val_np, alpha=0.5, color='green', label='Validation data')
+    ax.scatter(x_train_np, y_train_np, 
+                alpha=0.3, color='blue', label='training data')
     
     # Plot the predicted curve
-    plt.plot(x_grid_np, y_pred_np, color='red', linewidth=2, label='Model prediction')
+    ax.plot(x_grid_np, y_pred_np, 
+             color='red', 
+             linewidth=2, 
+             linestyle='--',
+             label='model prediction')
     
     # Plot the true function (without noise)
-    y_true = np.sin(x_grid_np) + 0.1 * x_grid_np**2 + 0.5 * np.cos(3*x_grid_np)
-    plt.plot(x_grid_np, y_true, color='black', linestyle='--', linewidth=2, label='True function')
+    y_true = f(x_grid_np)
+    ax.plot(x_grid_np, y_true, 
+             color='black', ls='--',
+             linewidth=2, label='true function')
     
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Neural Network Nonlinear Regression')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.legend()
     
-    return plt
+    return ax
 
 
-def train(key: jax.Array = SEED, activation: str = Config.activation):
-    """Train the neural network model."""
-    key = jax.random.PRNGKey(key)
-    key, subkey = jax.random.split(key)
+def train(seed: int = SEED, activation: str = Config.activation):
+    """
+    Train the neural network.
+
+    """
+    key = jax.random.PRNGKey(seed)
+    key, data_key, split_key = jax.random.split(key, 3)
     
     print(f"Using activation function: {activation}")
     print("Generating data...")
-    x, y = generate_data(subkey)
-    x_train, y_train, x_val, y_val = train_val_split(x, y)
+    x, y = generate_data(data_key)
+    x_train, y_train, x_val, y_val = train_val_split(split_key, x, y)
     
     print(f"Train data shape: {x_train.shape}, Validation data shape: {x_val.shape}")
     
@@ -433,7 +430,7 @@ def train(key: jax.Array = SEED, activation: str = Config.activation):
             # Check for improvement
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                best_params = jax.tree_map(lambda p: p, params)  # Copy the params
+                best_params = jax.tree.map(lambda p: p, params)  # Copy the params
                 patience_counter = 0
             else:
                 patience_counter += 1
@@ -447,8 +444,9 @@ def train(key: jax.Array = SEED, activation: str = Config.activation):
     print(f"Best validation loss: {best_val_loss:.6f}")
     
     # Generate the final plot
-    plot = plot_predictions(best_params, x_train, y_train, x_val, y_val, activation)
-    plot.show()
+    fig, ax = plt.subplots()
+    ax = plot_predictions(ax, best_params, x_train, y_train, x_val, y_val, activation)
+    plt.show()
     
     return best_params, (train_losses, val_losses)
 
@@ -464,8 +462,7 @@ def run_activation_comparison():
         print(f"{'='*50}\n")
         
         # Train with current activation function
-        key = jax.random.PRNGKey(SEED)  # Use same seed for fair comparison
-        params, (train_losses, val_losses) = train(key, activation)
+        params, (train_losses, val_losses) = train(SEED, activation)
         
         # Store results
         results[activation] = {
@@ -476,26 +473,25 @@ def run_activation_comparison():
         }
     
     # Compare final validation losses
-    print("\nComparison of Final Validation Losses:")
+    print("\nComparison of final validation losses:")
     print("-" * 40)
     for name, res in sorted(results.items(), key=lambda x: x[1]["final_val_loss"]):
         print(f"{name.upper():10s}: {res['final_val_loss']:.6f}")
     
     # Plot comparative learning curves
-    plt.figure(figsize=(12, 6))
+    fig, ax = plt.subplots()
     for name, res in results.items():
-        plt.plot(
+        ax.plot(
             np.arange(0, len(res["val_losses"]) * Config.eval_every, Config.eval_every),
             res["val_losses"],
             label=f"{name.upper()} (final: {res['final_val_loss']:.6f})"
         )
     
-    plt.xlabel('Epoch')
-    plt.ylabel('Validation MSE Loss')
-    plt.title('Comparison of Activation Functions')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.yscale('log')  # Log scale often better shows differences
+    ax.set_xlabel('epoch')
+    ax.set_ylabel('validation MSE Loss')
+    ax.set_title('Comparison of activation functions')
+    ax.legend()
+    ax.set_yscale('log')  # Log scale often better shows differences
     plt.show()
     
     return results
@@ -511,15 +507,14 @@ if __name__ == "__main__":
     params, (train_losses, val_losses) = train()
     
     # Plot learning curves
-    plt.figure(figsize=(10, 4))
-    plt.plot(train_losses, label='Training Loss')
-    plt.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
-             val_losses, label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('MSE Loss')
-    plt.title(f'Learning Curves with {Config.activation.upper()}')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    fig, ax = plt.subplots()
+    ax.plot(train_losses, label='training Loss')
+    ax.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
+             val_losses, label='validation Loss')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('MSE Loss')
+    ax.set_title(f'Learning Curves with {Config.activation.upper()}')
+    ax.legend()
     plt.show()
     
     # Option 2: Uncomment to run comparative analysis
