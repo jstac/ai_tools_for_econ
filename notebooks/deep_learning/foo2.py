@@ -49,6 +49,7 @@ def f(x):
 def generate_data(key: jax.Array) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """
     Generate synthetic nonlinear regression data.
+
     """
     key, subkey = jax.random.split(key)
     
@@ -324,33 +325,25 @@ def plot_predictions(ax,
                     activation: str = "relu"):
     """Plot the data and model predictions."""
     # Create a grid of x values for the curve
-    x_grid = jnp.linspace(-3.0, 3.0, 200).reshape(-1, 1)
+    x_grid = jnp.linspace(-3.0, 3.0, 200)
     
     # Get predictions
-    y_pred = forward(params, x_grid, activation=activation)
-    
-    # Convert to numpy for matplotlib
-    x_grid_np = np.array(x_grid).flatten()
-    y_pred_np = np.array(y_pred).flatten()
-    x_train_np = np.array(x_train).flatten()
-    y_train_np = np.array(y_train).flatten()
-    x_val_np = np.array(x_val).flatten()
-    y_val_np = np.array(y_val).flatten()
+    y_pred = forward(params, x_grid.reshape(-1, 1), activation=activation)
     
     # Plot training data
-    ax.scatter(x_train_np, y_train_np, 
+    ax.scatter(x_train.flatten(), y_train.flatten(), 
                 alpha=0.3, color='blue', label='training data')
     
     # Plot the predicted curve
-    ax.plot(x_grid_np, y_pred_np, 
+    ax.plot(x_grid, y_pred.flatten(), 
              color='red', 
              linewidth=2, 
              linestyle='--',
              label='model prediction')
     
     # Plot the true function (without noise)
-    y_true = f(x_grid_np)
-    ax.plot(x_grid_np, y_true, 
+    y_true = f(x_grid)
+    ax.plot(x_grid, y_true, 
              color='black', ls='--',
              linewidth=2, label='true function')
     
@@ -402,7 +395,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
     best_val_loss = float('inf')
     best_params = params
     patience_counter = 0
-    patience = 20  # Early stopping patience (in terms of evaluation intervals)
+    patience = 5   # Early stopping patience (in terms of evaluation intervals)
     
     print(f"Starting training for {Config.epochs} epochs...")
     for epoch in range(Config.epochs):
