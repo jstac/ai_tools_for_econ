@@ -1,5 +1,6 @@
 """
-Nonlinear regression with neural networks using JAX and Optax.
+
+Challenging nonlinear regression with neural networks using JAX and Optax.
 
 """
 
@@ -39,13 +40,6 @@ class Config:
     eval_every = 50
 
 
-# @jax.jit
-# def f(x):
-#     """
-#     Function to be estimated.
-#     """
-#     return jnp.sin(x) + 0.1 * x**2 + 0.5 * jnp.cos(3*x)
-    
 @jax.jit
 def f(x):
     """
@@ -79,9 +73,12 @@ def generate_data(
 
 
 class LayerParams(NamedTuple):
-    """Parameters for a single neural network layer."""
-    weights: jnp.ndarray
-    bias: jnp.ndarray
+    """
+    Parameters for a single neural network layer.
+
+    """
+    W: jnp.ndarray     # weights
+    b: jnp.ndarray     # biases
 
 
 def init_layer_params(
@@ -103,25 +100,22 @@ def init_layer_params(
     
     # Choose initialization strategy based on activation function
     if activation_name == "selu":
-        # LeCun initialization (recommended for SELU)
-        scale = jnp.sqrt(1.0 / in_dim)
-        weights = jax.random.normal(w_key, (in_dim, out_dim)) * scale
-        # For SELU, initialize biases to 0
-        bias = jnp.zeros((out_dim,))
+        # LeCun initialization 
+        s = jnp.sqrt(1.0 / in_dim)
+        W = jax.random.normal(w_key, (in_dim, out_dim)) * s
+        b = jnp.zeros((out_dim,))
     elif activation_name in ["tanh", "sigmoid"]:
         # Glorot/Xavier initialization
-        scale = jnp.sqrt(6.0 / (in_dim + out_dim))
-        weights = jax.random.uniform(
-                w_key, (in_dim, out_dim), minval=-scale, maxval=scale
-            )
-        bias = jnp.zeros((out_dim,))
+        s = jnp.sqrt(6.0 / (in_dim + out_dim))
+        W = jax.random.uniform(w_key, (in_dim, out_dim), minval=-s, maxval=s)
+        b = jnp.zeros((out_dim,))
     else:
         # He initialization (default for ReLU and variants)
-        scale = jnp.sqrt(2.0 / in_dim)
-        weights = jax.random.normal(w_key, (in_dim, out_dim)) * scale
-        bias = jnp.zeros((out_dim,))
+        s = jnp.sqrt(2.0 / in_dim)
+        W = jax.random.normal(w_key, (in_dim, out_dim)) * s
+        b = jnp.zeros((out_dim,))
     
-    return LayerParams(weights=weights, bias=bias), key
+    return LayerParams(W=W, b=b), key
 
 
 def init_network_params(key: jax.Array, 
@@ -146,7 +140,6 @@ def init_network_params(key: jax.Array,
     return params
 
 
-
 @partial(jax.jit, static_argnames=['activation'])
 def forward(
         params: List[LayerParams], 
@@ -162,35 +155,30 @@ def forward(
         x: Input data
         activation: Activation function name (static argument)
     """
-    # Implementation using a functional approach with JAX
-    activations = x
     
     # Select the activation function based on name
     if activation == "relu":
-        act_fn = jax.nn.relu
+        σ = jax.nn.relu
     elif activation == "selu":
-        act_fn = jax.nn.selu
+        σ = jax.nn.selu
     elif activation == "tanh":
-        act_fn = jnp.tanh
+        σ = jnp.tanh
     elif activation == "gelu":
-        act_fn = jax.nn.gelu
+        σ = jax.nn.gelu
     elif activation == "sigmoid":
-        act_fn = jax.nn.sigmoid
-    elif activation == "leaky_relu":
-        act_fn = jax.nn.leaky_relu
+        σ = jax.nn.sigmoid
     elif activation == "elu":
-        act_fn = jax.nn.elu
+        σ = jax.nn.elu
     else:
-        # Default to relu
-        act_fn = jax.nn.relu
+        # Default to selu
+        σ = jax.nn.selu
     
     # Apply all layers except the last with activation
-    for layer_params in params[:-1]:
-        activations = act_fn(activations @ layer_params.weights + layer_params.bias)
-    
+    for layer in params[:-1]:
+        x = σ(x @ layer.W + layer.b)
     # Apply last layer without activation (linear output)
-    final_params = params[-1]
-    output = activations @ final_params.weights + final_params.bias
+    layer = params[-1]
+    output = x @ layer.W + layer.b
     
     return output
 
@@ -200,7 +188,6 @@ def mse_loss(
         params: List[LayerParams], 
         x: jnp.ndarray, 
         y: jnp.ndarray,
-        *, 
         activation: str = "relu"
     ) -> jnp.ndarray:
 
@@ -223,8 +210,8 @@ def regularized_loss(params: List[LayerParams],
     
     # L2 regularization
     l2_penalty = 0.0
-    for param in params:
-        l2_penalty += jnp.sum(param.weights ** 2)
+    for layer in params:
+        l2_penalty += jnp.sum(layer.W ** 2)
     
     return mse + weight_decay * l2_penalty
 
