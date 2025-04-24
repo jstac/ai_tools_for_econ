@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.2
+    jupytext_version: 1.16.7
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -82,11 +82,12 @@ implementations.
 ```{code-cell} ipython3
 :hide-output: false
 
-EPOCHS = 4000           # Number of passes through the data set
-DATA_SIZE = 400         # Sample size
-NUM_LAYERS = 4          # Depth of the network
-OUTPUT_DIM = 10         # Output dimension of input and hidden layers
-LEARNING_RATE = 0.001   # Learning rate for gradient descent
+class Config:
+    epochs = 4000           # Number of passes through the data set
+    data_size = 400         # Sample size
+    num_layers = 4          # Depth of the network
+    output_dim = 10         # Output dimension of input and hidden layers
+    learning_rate = 0.001   # Learning rate for gradient descent
 ```
 
 The next piece of code is repeated from our Keras lecture and generates the data.
@@ -96,7 +97,7 @@ The next piece of code is repeated from our Keras lecture and generates the data
 
 def generate_data(x_min=0,           
                   x_max=5,          
-                  data_size=DATA_SIZE,
+                  data_size=Config.data_size,
                   seed=1234): # Default size for dataset
     np.random.seed(seed)
     x = np.linspace(x_min, x_max, num=data_size)
@@ -118,13 +119,14 @@ Here is a function to build the model.
 ```{code-cell} ipython3
 :hide-output: false
 
-def build_keras_model(num_layers=NUM_LAYERS, 
+def build_keras_model(num_layers=Config.num_layers, 
+                      output_dim=Config.output_dim,
                       activation_function='tanh'):
     model = Sequential()
     # Add layers to the network sequentially, from inputs towards outputs
-    for i in range(NUM_LAYERS-1):
+    for i in range(num_layers-1):
         model.add(
-           Dense(units=OUTPUT_DIM, 
+           Dense(units=output_dim, 
                  activation=activation_function)
            )
     # Add a final layer that maps to a scalar value, for regression.
@@ -142,14 +144,15 @@ Here is a function to train the model.
 ```{code-cell} ipython3
 :hide-output: false
 
-def train_keras_model(model, x, y, x_validate, y_validate):
+def train_keras_model(
+        model, x, y, x_validate, y_validate, epochs=Config.epochs):
     print(f"Training NN using Keras.")
     start_time = time()
     training_history = model.fit(
         x, y, 
         batch_size=max(x.shape), 
         verbose=0,
-        epochs=EPOCHS, 
+        epochs=epochs, 
         validation_data=(x_validate, y_validate)
     )
     elapsed = time() - start_time
@@ -253,10 +256,10 @@ The parameter “vector” `θ`  will be stored as a list of dicts.
 def initialize_params(seed=1234):
     """
     Generate an initial parameterization for a feed forward neural network with
-    number of layers = NUM_LAYERS.  Each of the hidden layers have OUTPUT_DIM
-    units.
+    number of layers = Config.num_layers.  
+    Each of the hidden layers have Config.output_dim units.
     """
-    k = OUTPUT_DIM
+    k = Config.output_dim
     shapes = (
         (1, k),  # W_0.shape
         (k, k),  # W_1.shape
@@ -361,8 +364,7 @@ In this case, however, to keep things as simple as possible, we’ll use a fixed
 :hide-output: false
 
 @jax.jit
-def update_parameters(θ, x, y):
-    λ = LEARNING_RATE 
+def update_parameters(θ, x, y, λ=Config.learning_rate):
     gradient = loss_gradient(θ, x, y)
     θ = jax.tree.map(lambda p, g: p - λ * g, θ, gradient)
     return θ
@@ -395,13 +397,15 @@ Here’s code that puts this all together.
 ```{code-cell} ipython3
 :hide-output: false
 
-def train_jax_model(θ, x, y, x_validate, y_validate):
+def train_jax_model(
+        θ, x, y, x_validate, y_validate, epochs=Config.epochs
+    ):
     """
     Train model using gradient descent via JAX autodiff.
     """
-    training_loss = np.empty(EPOCHS)
-    validation_loss = np.empty(EPOCHS)
-    for i in range(EPOCHS):
+    training_loss = np.empty(epochs)
+    validation_loss = np.empty(epochs)
+    for i in range(epochs):
         training_loss[i] = loss_fn(θ, x, y)
         validation_loss[i] = loss_fn(θ, x_validate, y_validate)
         θ = update_parameters(θ, x, y)
@@ -423,11 +427,14 @@ x_validate, y_validate = generate_data()
 ```{code-cell} ipython3
 :hide-output: false
 
-%%time 
+start_time = time()
 
 θ, training_loss, validation_loss = train_jax_model(
     θ, x, y, x_validate, y_validate
 )
+
+elapsed = time() - start_time
+print(f"Trained model with JAX in {elapsed:.2f} seconds.")
 ```
 
 This figure shows MSE across iterations:
@@ -436,7 +443,7 @@ This figure shows MSE across iterations:
 :hide-output: false
 
 fig, ax = plt.subplots()
-ax.plot(range(EPOCHS), validation_loss, label='validation loss')
+ax.plot(range(Config.epochs), validation_loss, label='validation loss')
 ax.legend()
 plt.show()
 ```
@@ -485,10 +492,12 @@ Here’s a training routine using Optax’s stochastic gradient descent solver.
 ```{code-cell} ipython3
 :hide-output: false
 
-def train_jax_optax(θ, x, y):
-    solver = optax.sgd(learning_rate=LEARNING_RATE)
+def train_jax_optax(
+        θ, x, y, epochs=Config.epochs, learning_rate=Config.learning_rate
+    ):
+    solver = optax.sgd(learning_rate)
     opt_state = solver.init(θ)
-    for _ in range(EPOCHS):
+    for _ in range(epochs):
         grad = loss_gradient(θ, x, y)
         updates, opt_state = solver.update(grad, opt_state, θ)
         θ = optax.apply_updates(θ, updates)
@@ -503,7 +512,13 @@ Let’s try running it.
 # Reset parameter vector
 θ = initialize_params()
 # Train network
-%time θ = train_jax_optax(θ, x, y)
+
+start_time = time()
+
+θ = train_jax_optax(θ, x, y)
+
+elapsed = time() - start_time
+print(f"Trained model with JAX and Optax in {elapsed:.2f} seconds.")
 ```
 
 The resulting MSE is the same as our hand-coded routine.
@@ -512,7 +527,6 @@ The resulting MSE is the same as our hand-coded routine.
 :hide-output: false
 
 print(f"""
-Completed training JAX model using Optax with SGD.
 Final MSE on test data set = {loss_fn(θ, x_validate, y_validate)}.
 """
 )
@@ -535,15 +549,18 @@ plt.show()
 We can also consider using a slightly more sophisticated gradient-based method,
 such as [ADAM](https://arxiv.org/pdf/1412.6980).
 
-You will notice that the syntax for using this alternative optimizer is very similar.
+You will notice that the syntax for using this alternative optimizer is very
+similar.
 
 ```{code-cell} ipython3
 :hide-output: false
 
-def train_jax_optax(θ, x, y):
-    solver = optax.adam(learning_rate=LEARNING_RATE)
+def train_jax_optax(
+        θ, x, y, epochs=Config.epochs, learning_rate=Config.learning_rate
+    ):
+    solver = optax.adam(learning_rate)
     opt_state = solver.init(θ)
-    for _ in range(EPOCHS):
+    for _ in range(epochs):
         grad = loss_gradient(θ, x, y)
         updates, opt_state = solver.update(grad, opt_state, θ)
         θ = optax.apply_updates(θ, updates)
@@ -556,7 +573,12 @@ def train_jax_optax(θ, x, y):
 # Reset parameter vector
 θ = initialize_params()
 # Train network
-%time θ = train_jax_optax(θ, x, y)
+start_time = time()
+
+θ = train_jax_optax(θ, x, y)
+
+elapsed = time() - start_time
+print(f"Trained model with Optax and ADAM in {elapsed:.2f} seconds.")
 ```
 
 Here’s the MSE.
@@ -565,7 +587,6 @@ Here’s the MSE.
 :hide-output: false
 
 print(f"""
-Completed training JAX model using Optax with ADAM.
 Final MSE on test data set = {loss_fn(θ, x_validate, y_validate)}.
 """
 )

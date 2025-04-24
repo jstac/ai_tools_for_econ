@@ -46,44 +46,22 @@ def f(x):
     return jnp.sin(x) + 0.1 * x**2 + 0.5 * jnp.cos(3*x)
     
 
-def generate_data(key: jax.Array) -> Tuple[jnp.ndarray, jnp.ndarray]:
+def generate_data(
+        key: jax.Array,
+        data_size: int = Config.data_size
+    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """
     Generate synthetic nonlinear regression data.
 
     """
-    key, subkey = jax.random.split(key)
-    
+    x_key, y_key = jax.random.split(key)
     x = jax.random.uniform(
-            key, (Config.data_size, 1), minval=-3.0, maxval=3.0
+            x_key, (data_size, 1), minval=-3.0, maxval=3.0
         )
     σ =  Config.noise_scale
-    w = σ * jax.random.normal(subkey, shape=x.shape)
+    w = σ * jax.random.normal(y_key, shape=x.shape)
     y = f(x) + w
     return x, y
-
-
-# Split data into training and validation sets
-def train_val_split(
-        key: jax.Array,
-        x: jnp.ndarray, 
-        y: jnp.ndarray, 
-        train_ratio: float = Config.train_ratio
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-
-    """
-    Split data into training and validation sets.
-    """
-    n = x.shape[0]
-    indices = jnp.arange(n)
-    train_size = int(n * train_ratio)
-    # Shuffle indices
-    shuffled_indices = jax.random.permutation(key, indices)
-    train_indices = shuffled_indices[:train_size]
-    val_indices = shuffled_indices[train_size:]
-    # Split data using indices    
-    x_train, y_train = x[train_indices], y[train_indices]
-    x_val, y_val = x[val_indices], y[val_indices]
-    return x_train, y_train, x_val, y_val
 
 
 class LayerParams(NamedTuple):
@@ -360,12 +338,15 @@ def train(seed: int = SEED, activation: str = Config.activation):
 
     """
     key = jax.random.PRNGKey(seed)
-    key, data_key, split_key = jax.random.split(key, 3)
+    #key, data_key, split_key = jax.random.split(key, 3)
+    key, train_data_key, val_data_key = jax.random.split(key, 3)
     
     print(f"Using activation function: {activation}")
     print("Generating data...")
-    x, y = generate_data(data_key)
-    x_train, y_train, x_val, y_val = train_val_split(split_key, x, y)
+    train_data_size = Config.data_size
+    x_train, y_train = generate_data(train_data_key, train_data_size)
+    val_data_size = int(Config.data_size * 0.5)  # half of training data size
+    x_val, y_val = generate_data(val_data_key, val_data_size)
     
     print(f"Train data shape: {x_train.shape}, Validation data shape: {x_val.shape}")
     
@@ -490,25 +471,22 @@ def run_activation_comparison():
     return results
 
 
-if __name__ == "__main__":
-    print(f"Using JAX version: {jax.__version__}")
-    print(f"Device: {jax.devices()[0]}")
-    
-    # Choose one of these options:
-    
-    # Option 1: Train with the default activation (SELU)
-    params, (train_losses, val_losses) = train()
-    
-    # Plot learning curves
-    fig, ax = plt.subplots()
-    ax.plot(train_losses, label='training Loss')
-    ax.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
-             val_losses, label='validation Loss')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('MSE Loss')
-    ax.set_title(f'Learning Curves with {Config.activation.upper()}')
-    ax.legend()
-    plt.show()
-    
-    # Option 2: Uncomment to run comparative analysis
-    # results = run_activation_comparison()
+print(f"Using JAX version: {jax.__version__}")
+print(f"Device: {jax.devices()[0]}")
+
+# Train 
+params, (train_losses, val_losses) = train()
+
+# Plot learning curves
+fig, ax = plt.subplots()
+ax.plot(train_losses, label='training Loss')
+ax.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
+         val_losses, label='validation Loss')
+ax.set_xlabel('epoch')
+ax.set_ylabel('MSE Loss')
+ax.set_title(f'Learning curves with {Config.activation.upper()}')
+ax.legend()
+plt.show()
+
+# Option 2: Uncomment to run comparative analysis
+# results = run_activation_comparison()
