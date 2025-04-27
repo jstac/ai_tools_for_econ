@@ -16,6 +16,8 @@ from time import time
 # Set random seed for reproducibility
 SEED = 42
 
+# The default configuration will have around 21,000 parameters
+
 # Configuration
 class Config:
     # Data parameters
@@ -254,15 +256,15 @@ def training_step_factory(optimizer, activation: str = Config.activation):
     loss_grad = jax.grad(lambda p, x, y: regularized_loss(p, x, y, activation=activation))
     
     @jax.jit
-    def train_step(params, opt_state, x_batch, y_batch):
+    def train_step(θ, opt_state, x_batch, y_batch):
         """Single training step."""
-        grads = loss_grad(params, x_batch, y_batch)
-        loss_val = regularized_loss(params, x_batch, y_batch, activation=activation)
+        grads = loss_grad(θ, x_batch, y_batch)
+        loss_val = regularized_loss(θ, x_batch, y_batch, activation=activation)
         
-        updates, new_opt_state = optimizer.update(grads, opt_state, params)
-        new_params = optax.apply_updates(params, updates)
+        updates, new_opt_state = optimizer.update(grads, opt_state, θ)
+        θ = optax.apply_updates(θ, updates)
         
-        return new_params, new_opt_state, loss_val
+        return θ, new_opt_state, loss_val
     
     return train_step
 
