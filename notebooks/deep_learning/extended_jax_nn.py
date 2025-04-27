@@ -9,7 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 import matplotlib.pyplot as plt
-from typing import List, Dict, Tuple, Any, Callable, NamedTuple
+from typing import List, Tuple, NamedTuple
 from functools import partial
 from time import time
 
@@ -22,22 +22,19 @@ class Config:
     data_size = 4_000
     train_ratio = 0.8
     noise_scale = 0.2
-    
     # Model parameters
     hidden_layers = [128, 128, 32]
     activation = "selu"  # Options: "relu", "selu", "tanh", "sigmoid"
-    
     # Training parameters
     batch_size = 128
-    epochs = 80_000
+    epochs = 20_000
     init_lr = 0.001
     min_lr = 0.0001
     warmup_steps = 100
     decay_steps = 300
-    weight_decay = 1e-5
-    
+    regularization_term = 1e-5
     # Evaluation
-    eval_every = 50
+    eval_every = 100
 
 
 @jax.jit
@@ -63,9 +60,11 @@ def generate_data(
 
     """
     x_key, y_key = jax.random.split(key)
+    # x is generated uniformly
     x = jax.random.uniform(
             x_key, (data_size, 1), minval=-10.0, maxval=10.0
         )
+    # y = f(x) + noise
     σ =  Config.noise_scale
     w = σ * jax.random.normal(y_key, shape=x.shape)
     y = f(x) + w
@@ -74,7 +73,7 @@ def generate_data(
 
 class LayerParams(NamedTuple):
     """
-    Parameters for a single neural network layer.
+    Stores parameters for one layer of the neural network.
 
     """
     W: jnp.ndarray     # weights
@@ -126,7 +125,7 @@ def init_network_params(key: jax.Array,
     Initialize all parameters for the network.
 
     """
-    params = []
+    θ = []
     
     for i in range(len(layer_sizes) - 1):
         layer_params, key = init_layer_params(
@@ -135,25 +134,25 @@ def init_network_params(key: jax.Array,
             layer_sizes[i + 1],
             activation_name
         )
-        params.append(layer_params)
+        θ.append(layer_params)
         
-    return params
+    return θ
 
 
 @partial(jax.jit, static_argnames=['activation'])
 def forward(
-        params: List[LayerParams], 
+        θ: List[LayerParams], 
         x: jnp.ndarray, 
-        activation: str = "selu"
+        activation: str = Config.activation
     ) -> jnp.ndarray:
 
     """
     Forward pass through the neural network.
     
     Args:
-        params: List of layer parameters
-        x: Input data
-        activation: Activation function name (static argument)
+        θ: network parameters
+        x: input data
+        activation: activation function name (static argument)
     """
     
     # Select the activation function based on name
@@ -174,11 +173,11 @@ def forward(
         σ = jax.nn.selu
     
     # Apply all layers except the last with activation
-    for layer in params[:-1]:
-        x = σ(x @ layer.W + layer.b)
+    for W, b in θ[:-1]:
+        x = σ(x @ W + b)
     # Apply last layer without activation (linear output)
-    layer = params[-1]
-    output = x @ layer.W + layer.b
+    W, b = θ[-1]
+    output = x @ W + b
     
     return output
 
@@ -200,12 +199,17 @@ def mse_loss(
 
 
 @partial(jax.jit, static_argnames=['activation'])
-def regularized_loss(params: List[LayerParams], 
-                     x: jnp.ndarray, 
-                     y: jnp.ndarray, 
-                     activation: str = "selu",
-                     weight_decay: float = Config.weight_decay) -> jnp.ndarray:
-    """Loss function with L2 regularization."""
+def regularized_loss(
+        params: List[LayerParams], 
+        x: jnp.ndarray, 
+        y: jnp.ndarray, 
+        activation: str = "selu",
+        λ: float = Config.regularization_term
+    ) -> jnp.ndarray:
+    """
+    Loss function with L2 regularization.
+
+    """
     mse = mse_loss(params, x, y, activation=activation)
     
     # L2 regularization
@@ -213,12 +217,14 @@ def regularized_loss(params: List[LayerParams],
     for layer in params:
         l2_penalty += jnp.sum(layer.W ** 2)
     
-    return mse + weight_decay * l2_penalty
+    return mse + λ * l2_penalty
 
 
-# Create learning rate schedule
 def create_lr_schedule():
-    """Create learning rate schedule with warmup and decay."""
+    """
+    Create an Optax learning rate schedule with warmup and decay.
+
+    """
     warmup_fn = optax.linear_schedule(
         init_value=0.0,
         end_value=Config.init_lr,
@@ -238,17 +244,20 @@ def create_lr_schedule():
     )
 
 
-def create_train_step(optimizer, activation: str = "relu"):
-    """Create a JIT-compiled training step function."""
+def training_step_factory(optimizer, activation: str = Config.activation):
+    """
+    Create a JIT-compiled training step function.
+
+    """
     
     # Create a specialized loss gradient function for this activation
     loss_grad = jax.grad(lambda p, x, y: regularized_loss(p, x, y, activation=activation))
     
     @jax.jit
-    def train_step(params, opt_state, batch_x, batch_y):
+    def train_step(params, opt_state, x_batch, y_batch):
         """Single training step."""
-        grads = loss_grad(params, batch_x, batch_y)
-        loss_val = regularized_loss(params, batch_x, batch_y, activation=activation)
+        grads = loss_grad(params, x_batch, y_batch)
+        loss_val = regularized_loss(params, x_batch, y_batch, activation=activation)
         
         updates, new_opt_state = optimizer.update(grads, opt_state, params)
         new_params = optax.apply_updates(params, updates)
@@ -263,8 +272,12 @@ def create_data_batch_iterator(
         y: jnp.ndarray, 
         batch_size: int = Config.batch_size,
         key: jax.Array = None
-    ):
-    """Create a batched data iterator."""
+    ) -> List[Tuple[jax.Array]]:
+    """
+    Create a list of batched data.  Each element of the list is a tuple
+    (x_batch, y_batch), containing a batch of data for training.
+
+    """
     num_samples = x.shape[0]
     
     # Create a new key if none provided
@@ -280,23 +293,28 @@ def create_data_batch_iterator(
     batches = []
     for i in range(num_batches):
         batch_indices = indices[i * batch_size:(i + 1) * batch_size]
-        batch_x = x[batch_indices]
-        batch_y = y[batch_indices]
-        batches.append((batch_x, batch_y))
+        x_batch = x[batch_indices]
+        y_batch = y[batch_indices]
+        batches.append((x_batch, y_batch))
     
     return batches
 
 
-def evaluate(params: List[LayerParams], 
-             x: jnp.ndarray, 
-             y: jnp.ndarray,
-             activation: str = "relu") -> float:
-    """Evaluate the model on validation data."""
-    return float(mse_loss(params, x, y, activation=activation))
+def evaluate(
+        θ: List[LayerParams], 
+        x: jnp.ndarray, 
+        y: jnp.ndarray,
+        activation: str = Config.activation
+    ) -> float:
+    """
+    Evaluate the model on data (x, y).
+
+    """
+    return float(mse_loss(θ, x, y, activation=activation))
 
 
 def plot_predictions(ax,
-                    params: List[LayerParams],
+                    θ: List[LayerParams],
                     x_train: jnp.ndarray,
                     y_train: jnp.ndarray,
                     x_val: jnp.ndarray,
@@ -307,7 +325,7 @@ def plot_predictions(ax,
     x_grid = jnp.linspace(-10.0, 10.0, 200)
     
     # Get predictions
-    y_pred = forward(params, x_grid.reshape(-1, 1), activation=activation)
+    y_pred = forward(θ, x_grid.reshape(-1, 1), activation=activation)
     
     # Plot training data
     ax.scatter(x_train.flatten(), y_train.flatten(), 
@@ -339,7 +357,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
 
     """
     key = jax.random.PRNGKey(seed)
-    #key, data_key, split_key = jax.random.split(key, 3)
+    # Produce separate keys for training and validation data
     key, train_data_key, val_data_key = jax.random.split(key, 3)
     
     print(f"Using activation function: {activation}")
@@ -349,16 +367,15 @@ def train(seed: int = SEED, activation: str = Config.activation):
     val_data_size = int(Config.data_size * 0.5)  # half of training data size
     x_val, y_val = generate_data(val_data_key, val_data_size)
     
-    print(f"Train data shape: {x_train.shape}, Validation data shape: {x_val.shape}")
-    
     # Define model architecture
-    input_dim = x_train.shape[1]
-    output_dim = y_train.shape[1] if len(y_train.shape) > 1 else 1
+    input_dim = 1  # scalar input
+    output_dim = 1 # scalar output
     layer_sizes = [input_dim] + Config.hidden_layers + [output_dim]
     
+    # Set up the ANN
     print(f"Initializing model with layer sizes: {layer_sizes}")
     key, subkey = jax.random.split(key)
-    params = init_network_params(subkey, layer_sizes, activation)
+    θ = init_network_params(subkey, layer_sizes, activation)
     
     # Create optimizer with learning rate schedule
     lr_schedule = create_lr_schedule()
@@ -366,30 +383,34 @@ def train(seed: int = SEED, activation: str = Config.activation):
         optax.clip_by_global_norm(1.0),  # Gradient clipping for stability
         optax.adam(learning_rate=lr_schedule)
     )
-    opt_state = optimizer.init(params)
+    opt_state = optimizer.init(θ)
     
     # Create training step function
-    train_step_fn = create_train_step(optimizer, activation)
+    train_step_fn = training_step_factory(optimizer, activation)
     
     # Training loop
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
-    best_params = params
+    best_params = θ
     patience_counter = 0
     patience = 50   # Early stopping patience (in terms of evaluation intervals)
     
     print(f"Starting training for {Config.epochs} epochs...")
     start = time()
+
+    # One epoch is a complete pass through the data set
     for epoch in range(Config.epochs):
+
         # Create shuffled batches for this epoch
         key, subkey = jax.random.split(key)
         batches = create_data_batch_iterator(x_train, y_train, Config.batch_size, subkey)
         
-        # Process each batch
+        # Process each batch, updating parameters 
         epoch_losses = []
-        for batch_x, batch_y in batches:
-            params, opt_state, loss = train_step_fn(params, opt_state, batch_x, batch_y)
+        for x_batch, y_batch in batches:
+            θ, opt_state, loss = train_step_fn(θ, opt_state, x_batch,
+                                                    y_batch)
             epoch_losses.append(loss)
             
         # Calculate average loss for this epoch
@@ -398,7 +419,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
         
         # Evaluate on validation set periodically
         if epoch % Config.eval_every == 0 or epoch == Config.epochs - 1:
-            val_loss = evaluate(params, x_val, y_val, activation)
+            val_loss = evaluate(θ, x_val, y_val, activation)
             val_losses.append(val_loss)
             
             print(f"Epoch {epoch}: Train Loss = {avg_train_loss:.6f}, Val Loss = {val_loss:.6f}")
@@ -406,7 +427,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
             # Check for improvement
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                best_params = jax.tree.map(lambda p: p, params)  # Copy the params
+                best_theta = jax.tree.map(lambda p: p, θ)  # Copy the params
                 patience_counter = 0
             else:
                 patience_counter += 1
@@ -415,7 +436,9 @@ def train(seed: int = SEED, activation: str = Config.activation):
             if patience_counter >= patience:
                 print(f"Early stopping triggered at epoch {epoch}")
                 break
+
     elapsed = time() - start
+
     print(f"Training completed in {elapsed:.2f} seconds.")
     print(f"Best validation loss: {best_val_loss:.6f}")
     
@@ -438,11 +461,11 @@ def run_activation_comparison():
         print(f"{'='*50}\n")
         
         # Train with current activation function
-        params, (train_losses, val_losses) = train(SEED, activation)
+        θ, (train_losses, val_losses) = train(SEED, activation)
         
         # Store results
         results[activation] = {
-            "params": params,
+            "θ": θ,
             "train_losses": train_losses,
             "val_losses": val_losses,
             "final_val_loss": val_losses[-1]
@@ -477,7 +500,7 @@ print(f"Using JAX version: {jax.__version__}")
 print(f"Device: {jax.devices()[0]}")
 
 # Train 
-params, (train_losses, val_losses) = train()
+θ, (train_losses, val_losses) = train()
 
 # Plot learning curves
 fig, ax = plt.subplots()
