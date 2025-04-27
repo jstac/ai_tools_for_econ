@@ -119,7 +119,8 @@ def init_layer_params(
     return LayerParams(W=W, b=b), key
 
 
-def init_network_params(key: jax.Array, 
+def initialize_network_params(
+        key: jax.Array, 
         layer_sizes: List[int],
         activation_name: str = Config.activation
     ) -> List[LayerParams]:
@@ -128,15 +129,17 @@ def init_network_params(key: jax.Array,
 
     """
     θ = []
-    
+    # For all layers but the last one
     for i in range(len(layer_sizes) - 1):
-        layer_params, key = init_layer_params(
+        # Generate an instance of LayerParams corresponding to layer i
+        layer, key = init_layer_params(
             key, 
-            layer_sizes[i], 
-            layer_sizes[i + 1],
+            layer_sizes[i],      # in dimension for layer
+            layer_sizes[i + 1],  # out dimension for layer
             activation_name
         )
-        θ.append(layer_params)
+        # And append it to the list the contains all network parameters.
+        θ.append(layer)
         
     return θ
 
@@ -174,10 +177,10 @@ def forward(
         # Default to selu
         σ = jax.nn.selu
     
-    # Apply all layers except the last with activation
+    # Apply all layers except the last, with activation
     for W, b in θ[:-1]:
         x = σ(x @ W + b)
-    # Apply last layer without activation (linear output)
+    # Apply last layer without activation (for regression)
     W, b = θ[-1]
     output = x @ W + b
     
@@ -273,7 +276,7 @@ def create_data_batch_iterator(
         x: jnp.ndarray, 
         y: jnp.ndarray, 
         batch_size: int = Config.batch_size,
-        key: jax.Array = None
+        key: jax.Array 
     ) -> List[Tuple[jax.Array]]:
     """
     Create a list of batched data.  Each element of the list is a tuple
@@ -281,10 +284,6 @@ def create_data_batch_iterator(
 
     """
     num_samples = x.shape[0]
-    
-    # Create a new key if none provided
-    if key is None:
-        key = jax.random.PRNGKey(0)
     
     # Shuffle the data
     indices = jax.random.permutation(key, jnp.arange(num_samples))
@@ -309,7 +308,7 @@ def evaluate(
         activation: str = Config.activation
     ) -> float:
     """
-    Evaluate the model on data (x, y).
+    Compute the loss on data (x, y) without regularization.
 
     """
     return float(mse_loss(θ, x, y, activation=activation))
@@ -377,7 +376,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
     # Set up the ANN
     print(f"Initializing model with layer sizes: {layer_sizes}")
     key, subkey = jax.random.split(key)
-    θ = init_network_params(subkey, layer_sizes, activation)
+    θ = initialize_network_params(subkey, layer_sizes, activation)
     
     # Create optimizer with learning rate schedule
     lr_schedule = create_lr_schedule()
