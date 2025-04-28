@@ -13,8 +13,6 @@ from typing import List, Tuple, NamedTuple
 from functools import partial
 from time import time
 
-# Set random seed for reproducibility
-SEED = 42
 
 # The default configuration will have around 21,000 parameters
 
@@ -275,8 +273,8 @@ def training_step_factory(optimizer, activation: str = Config.activation):
 def create_data_batch_iterator(
         x: jnp.ndarray, 
         y: jnp.ndarray, 
-        batch_size: int = Config.batch_size,
-        key: jax.Array 
+        key: jax.Array,
+        batch_size: int,
     ) -> List[Tuple[jax.Array]]:
     """
     Create a list of batched data.  Each element of the list is a tuple
@@ -301,7 +299,7 @@ def create_data_batch_iterator(
     return batches
 
 
-def evaluate(
+def evaluate_mse(
         θ: List[LayerParams], 
         x: jnp.ndarray, 
         y: jnp.ndarray,
@@ -314,69 +312,12 @@ def evaluate(
     return float(mse_loss(θ, x, y, activation=activation))
 
 
-def plot_predictions(ax,
-                    θ: List[LayerParams],
-                    x_train: jnp.ndarray,
-                    y_train: jnp.ndarray,
-                    x_val: jnp.ndarray,
-                    y_val: jnp.ndarray,
-                    activation: str = "relu"):
-    """Plot the data and model predictions."""
-    # Create a grid of x values for the curve
-    x_grid = jnp.linspace(-10.0, 10.0, 200)
-    
-    # Get predictions
-    y_pred = forward(θ, x_grid.reshape(-1, 1), activation=activation)
-    
-    # Plot training data
-    ax.scatter(x_train.flatten(), y_train.flatten(), 
-                alpha=0.3, color='blue', label='training data')
-    
-    # Plot the predicted curve
-    ax.plot(x_grid, y_pred.flatten(), 
-             color='red', 
-             linewidth=2, 
-             linestyle='--',
-             label='model prediction')
-    
-    # Plot the true function (without noise)
-    y_true = f(x_grid)
-    ax.plot(x_grid, y_true, 
-             color='black', ls='--',
-             linewidth=2, label='true function')
-    
-    ax.set_xlabel('$x$')
-    ax.set_ylabel('$y$')
-    ax.legend()
-    
-    return ax
 
-
-def train(seed: int = SEED, activation: str = Config.activation):
+def train(θ, activation, x_train, y_train, x_val, y_val, key):
     """
     Train the neural network.
 
     """
-    key = jax.random.PRNGKey(seed)
-    # Produce separate keys for training and validation data
-    key, train_data_key, val_data_key = jax.random.split(key, 3)
-    
-    print(f"Using activation function: {activation}")
-    print("Generating data...")
-    train_data_size = Config.data_size
-    x_train, y_train = generate_data(train_data_key, train_data_size)
-    val_data_size = int(Config.data_size * 0.5)  # half of training data size
-    x_val, y_val = generate_data(val_data_key, val_data_size)
-    
-    # Define model architecture
-    input_dim = 1  # scalar input
-    output_dim = 1 # scalar output
-    layer_sizes = [input_dim] + Config.hidden_layers + [output_dim]
-    
-    # Set up the ANN
-    print(f"Initializing model with layer sizes: {layer_sizes}")
-    key, subkey = jax.random.split(key)
-    θ = initialize_network_params(subkey, layer_sizes, activation)
     
     # Create optimizer with learning rate schedule
     lr_schedule = create_lr_schedule()
@@ -405,7 +346,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
 
         # Create shuffled batches for this epoch
         key, subkey = jax.random.split(key)
-        batches = create_data_batch_iterator(x_train, y_train, Config.batch_size, subkey)
+        batches = create_data_batch_iterator(x_train, y_train, subkey, Config.batch_size)
         
         # Process each batch, updating parameters 
         epoch_losses = []
@@ -420,9 +361,9 @@ def train(seed: int = SEED, activation: str = Config.activation):
         
         # Evaluate on validation set periodically
         if epoch % Config.eval_every == 0 or epoch == Config.epochs - 1:
-            val_loss = evaluate(θ, x_val, y_val, activation)
+
+            val_loss = evaluate_mse(θ, x_val, y_val, activation)
             val_losses.append(val_loss)
-            
             print(f"Epoch {epoch}: Train Loss = {avg_train_loss:.6f}, Val Loss = {val_loss:.6f}")
             
             # Check for improvement
@@ -443,12 +384,7 @@ def train(seed: int = SEED, activation: str = Config.activation):
     print(f"Training completed in {elapsed:.2f} seconds.")
     print(f"Best validation loss: {best_val_loss:.6f}")
     
-    # Generate the final plot
-    fig, ax = plt.subplots()
-    ax = plot_predictions(ax, best_params, x_train, y_train, x_val, y_val, activation)
-    plt.show()
-    
-    return best_params, (train_losses, val_losses)
+    return θ, (train_losses, val_losses)
 
 
 def run_activation_comparison():
@@ -500,19 +436,88 @@ def run_activation_comparison():
 print(f"Using JAX version: {jax.__version__}")
 print(f"Device: {jax.devices()[0]}")
 
-# Train 
-θ, (train_losses, val_losses) = train()
+# == Train == #
 
-# Plot learning curves
-fig, ax = plt.subplots()
-ax.plot(train_losses, label='training Loss')
-ax.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
-         val_losses, label='validation Loss')
-ax.set_xlabel('epoch')
-ax.set_ylabel('MSE Loss')
-ax.set_title(f'Learning curves with {Config.activation.upper()}')
-ax.legend()
-plt.show()
+SEED = 42 # Set random seed for reproducibility
+key = jax.random.PRNGKey(SEED)
+
+# Produce separate keys for training and validation data
+key, train_data_key, val_data_key = jax.random.split(key, 3)
+
+# Generate training and validation data
+print("Generating data...")
+train_data_size = Config.data_size
+x_train, y_train = generate_data(train_data_key, train_data_size)
+val_data_size = int(Config.data_size * 0.5)  # half of training data size
+x_val, y_val = generate_data(val_data_key, val_data_size)
+
+# Define model architecture
+input_dim = 1  # scalar input
+output_dim = 1 # scalar output
+layer_sizes = [input_dim] + Config.hidden_layers + [output_dim]
+
+# Choose activation function
+activation = Config.activation
+print(f"Using activation function: {activation}")
+
+# Initialize all the parameters in the network
+print(f"Initializing model with layer sizes: {layer_sizes}")
+key, subkey = jax.random.split(key)
+θ_init = initialize_network_params(subkey, layer_sizes, activation)
+    
+# Train the model using training data, compute losses using validation data
+θ, (train_losses, val_losses) = train(
+        θ_init, activation, x_train, y_train, x_val, y_val, key
+)
+
+
+def plot_regression():
+    """
+    Plot original and fitted functions.
+
+    """
+    x_grid = jnp.linspace(-10.0, 10.0, 200)
+    y_pred = forward(θ, x_grid.reshape(-1, 1), activation=activation)
+    
+    fig, ax = plt.subplots()
+    # Plot training data
+    ax.scatter(x_train.flatten(), y_train.flatten(), 
+                alpha=0.2, color='blue', label='training data')
+    
+    # Plot the predicted curve
+    ax.plot(x_grid, y_pred.flatten(), 
+             color='red', 
+             linewidth=2, 
+             linestyle='--',
+             label='model prediction')
+    
+    # Plot the true function (without noise)
+    y_true = f(x_grid)
+    ax.plot(x_grid, y_true, 
+             color='black', ls='--',
+             linewidth=2, label='true function')
+    
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.legend()
+    
+    plt.show()
+
+
+def plot_learning_curves():
+    """
+    Plot the MSE curves on training and validation data over epochs.
+
+    """
+    fig, ax = plt.subplots()
+    ax.plot(train_losses, label='training Loss')
+    ax.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
+             val_losses, label='validation Loss')
+    ax.set_xlabel('epoch')
+    ax.set_ylabel('MSE Loss')
+    ax.set_title(f'Learning curves with {Config.activation.upper()}')
+    ax.legend()
+    plt.show()
 
 # Option 2: Uncomment to run comparative analysis
 # results = run_activation_comparison()
