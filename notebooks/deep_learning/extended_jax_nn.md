@@ -55,7 +55,7 @@ class Config:
     # Data parameters
     data_size = 4_000
     train_ratio = 0.8
-    noise_scale = 0.2
+    noise_scale = 0.25
     # Model parameters
     hidden_layers = [128, 128, 32]
     activation = "selu"  # Options: "relu", "selu", "tanh", "sigmoid"
@@ -273,7 +273,7 @@ The next function calculates loss associated with a given prediction vector in t
 @partial(jax.jit, static_argnames=['activation'])
 def mse_loss(
         params: List[LayerParams], 
-        x: jnp.ndarray, a
+        x: jnp.ndarray,
         y: jnp.ndarray,
         activation: str = "relu"
     ) -> jnp.ndarray:
@@ -309,22 +309,6 @@ def regularized_loss(
         l2_penalty += jnp.sum(layer.W ** 2)
     
     return mse + λ * l2_penalty
-```
-
-
-
-```{code-cell} ipython3
-def evaluate_mse(
-        θ: List[LayerParams], 
-        x: jnp.ndarray, 
-        y: jnp.ndarray,
-        activation: str = Config.activation
-    ) -> float:
-    """
-    Compute the loss on data (x, y) without regularization.
-
-    """
-    return float(mse_loss(θ, x, y, activation=activation))
 ```
 
 ## Training Components
@@ -547,7 +531,6 @@ print(f"Best validation loss: {best_val_loss:.6f}")
 Here we plot the MSE curves on training and validation data over epochs.
 
 ```{code-cell} ipython3
-
 fig, ax = plt.subplots()
 ax.plot(train_losses, label='training Loss')
 ax.plot(np.arange(0, len(val_losses) * Config.eval_every, Config.eval_every), 
