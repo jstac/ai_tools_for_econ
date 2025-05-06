@@ -1,6 +1,21 @@
 """
+
 Solve infinite horizon cake eating problem using policy gradient ascent with
 JAX. Policy is represented as a simple neural network.
+
+Utility is u(c) = c^(1-γ) / (1-γ) and the discount factor is β.
+
+Wealth evolves according to 
+
+    w' = R(w-c) 
+
+where R > 0 is the gross interest rate.  
+
+To ensure stability we assume that β R^(1-γ) < 1.
+
+Note that the optimal policy is c = κ w, where
+
+    κ := 1 - [β R^(1-γ)]^(1/γ)
 
 The initial size of the cake is 1.0.
 
@@ -11,21 +26,38 @@ import jax.numpy as jnp
 from jax import grad, jit, random
 import optax
 import matplotlib.pyplot as plt
+from typing import List, Tuple, NamedTuple
 
-class Config:
+class Model(NamedTuple):
     """
-    Configuration and parameters.
+    Stores parameters for the model.
+
+    """
+    γ: int = 2.0
+    β: int = 0.95
+    R: int = 1.01
+
+
+class LayerParams(NamedTuple):
+    """
+    Stores parameters for one layer of the neural network.
+
+    """
+    W: jnp.ndarray     # weights
+    b: jnp.ndarray     # biases
+
+
+class LearningConfig:
+    """
+    Configuration and parameters for training the neural network.
 
     """
     seed = 42
-    γ = 2.0
-    β = 0.95
     learning_rate = 0.01
-    n_iter = 1_000
-    n_paths = 1_000
+    n_iter = 10_000
+    n_paths = 5_000
     n_steps = 50
     layer_sizes = 1, 16, 16, 1
-
 
 def initialize_layer(in_dim, out_dim, key):
     """
@@ -45,7 +77,6 @@ def initialize_network(key, layer_sizes):
     A network is a list of tuples (W, b).
 
     """
-    # Build the list of parameters
     params = []
     # For all layers but the output 
     for i in range(len(layer_sizes) - 1):
@@ -82,8 +113,8 @@ def policy_network(params, w):
     return consumption
 
 
-# Utility function
-def utility(c, γ=Config.γ):
+def u(c, γ):
+    """ Utility function. """
     c = jnp.maximum(c, 1e-10)
     return c**(1 - γ) / (1 - γ)
 
@@ -103,10 +134,9 @@ def simulate_path(params, key):
         # Ensure feasible consumption
         c = jnp.minimum(c, w - 1e-10)
         
-        
         # Update state
-        w = jnp.maximum(w - c, 0.0)
-        value = value + discount * utility(c) * continue_sim
+        w = jnp.maximum(R * (w - c), 0.0)
+        value = value + discount * u(c, γ) * continue_sim
         discount = discount * β
         new_state = w, value, discount
         return new_state
@@ -128,13 +158,17 @@ def estimate_negative_value(params, key):
     return - jnp.mean(values)
 
 
-# == Gradient routine == # 
+# == Train and solve == # 
 
 # Unpack names
-seed, γ, β = Config.seed, Config.γ, Config.β
+
+seed, γ, β, R = Config.seed, Config.γ, Config.β, Config.R
 learning_rate, n_iter = Config.learning_rate, Config.n_iter
 n_paths, n_steps = Config.n_paths, Config.n_steps
 layer_sizes = Config.layer_sizes
+
+# Test stability
+assert β * R**(1 - γ) < 1, "Parameters fail stability test."
 
 # Optimizer
 optimizer = optax.adam(learning_rate)
