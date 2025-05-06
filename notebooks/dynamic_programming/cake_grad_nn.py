@@ -19,6 +19,8 @@ Note that the optimal policy is c = κ w, where
 
 The initial size of the cake is 1.0.
 
+Acknowledgements: Jingni Yang
+
 """
 
 import jax
@@ -53,11 +55,11 @@ class Config:
 
     """
     seed = 42
-    n_iter = 2_000
+    n_iter = 1_000
     n_paths = 5_000
-    path_length = 120
-    layer_sizes = 1, 16, 16, 1
-    init_lr = 0.0025
+    path_length = 1000
+    layer_sizes = 1, 8, 8, 1
+    init_lr = 0.0015
     min_lr = 0.0001
     warmup_steps = 100
     decay_steps = 300
@@ -250,17 +252,18 @@ consumption_rate = policy_vmap(w_grid)
 
 # Plot consumption rate
 fig, ax = plt.subplots()
-ax.plot(w_grid, consumption_rate, lw=2, label='policy-based')
+ax.plot(w_grid, consumption_rate, linestyle='--', lw=2, label='policy-based')
 ax.plot(w_grid, κ * jnp.ones(len(w_grid)), lw=2, label='optimal')
 ax.set_xlabel('Cake size')
 ax.set_ylabel('Consumption rate (c/w)')
 ax.set_title('Consumption rate')
+ax.set_ylim((0, 1))
 ax.legend()
 plt.show()
 
 
 
-def simulate_consumption_path(params, T=50):
+def simulate_consumption_path(params, T=120):
     """
     Compute consumption path using neural network policy identified by params.
 
@@ -280,7 +283,7 @@ def simulate_consumption_path(params, T=50):
     
     return w_path, c_path
 
-def compute_optimal_path(T=50):
+def compute_optimal_path(T=120):
     """
     Compute optimal consumption path.
 
@@ -307,15 +310,15 @@ w_opt, c_opt = compute_optimal_path()
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-ax1.plot(w_sim, label='policy-based')
-ax1.plot(w_opt, label='optimal')
+ax1.plot(w_sim, lw=2, linestyle='--', label='policy-based')
+ax1.plot(w_opt, lw=2, label='optimal')
 ax1.set_xlabel('Time')
 ax1.set_ylabel('Cake size')
 ax1.set_title('Cake size over time')
 ax1.legend()
 
-ax2.plot(c_sim, label='policy-based')
-ax2.plot(c_opt, label='optimal')
+ax2.plot(c_sim, lw=2, linestyle='--', label='policy-based')
+ax2.plot(c_opt, lw=2, label='optimal')
 ax2.set_xlabel('Time')
 ax2.set_ylabel('Consumption')
 ax2.set_title('Consumption over time')
