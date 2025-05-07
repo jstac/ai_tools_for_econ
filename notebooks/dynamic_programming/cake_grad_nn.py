@@ -19,7 +19,7 @@ Note that the optimal policy is c = κ w, where
 
 The initial size of the cake is 1.0.
 
-Acknowledgements: Jingni Yang
+Acknowledgements: Humphrey Yang and Jingni Yang
 
 """
 
