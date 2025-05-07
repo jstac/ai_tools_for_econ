@@ -55,7 +55,7 @@ class Config:
 
     """
     seed = 42
-    n_iter = 1_000
+    epochs = 500
     n_paths = 5_000
     path_length = 1000
     layer_sizes = 1, 8, 8, 1
@@ -128,7 +128,8 @@ def simulate_path(params, key):
     """
     def update(t, state):
         w, value, discount = state
-        c = forward(params, w) * w
+        consumption_rate = forward(params, w)
+        c = consumption_rate * w
         
         # Ensure feasible consumption
         c = jnp.minimum(c, w - 1e-10)
@@ -190,7 +191,7 @@ def create_lr_schedule():
 # Unpack names
 
 γ, β, R = Model.γ, Model.β, Model.R
-seed, n_iter = Config.seed, Config.n_iter
+seed, epochs = Config.seed, Config.epochs
 n_paths, path_length = Config.n_paths, Config.path_length
 layer_sizes = Config.layer_sizes
 
@@ -218,7 +219,7 @@ opt_state = optimizer.init(params)
 value_history = []
 
 # Training loop
-for i in range(n_iter):
+for i in range(epochs):
     key = random.PRNGKey(i)
     
     # Compute value and gradients at existing parameterization
@@ -268,56 +269,52 @@ def simulate_consumption_path(params, T=120):
     Compute consumption path using neural network policy identified by params.
 
     """
-    w_path = [1.0]   # 1.0 is the initial size
-    c_path = []
-    
+    # Intialize 1.0 is the initial size
+    w_sim = [1.0]   
+    c_sim = []
+    w_opt = [1.0]  
+    c_opt = []
+
     w = 1.0
     for t in range(T):
+
+        # Update policy path
         c = forward(params, w) * w
-        c_path.append(float(c))
+        c_sim.append(float(c))
         w = R * (w - c)
-        w_path.append(float(w))
+        w_sim.append(float(w))
         
         if w <= 1e-10:
             break
-    
-    return w_path, c_path
 
-def compute_optimal_path(T=120):
-    """
-    Compute optimal consumption path.
-
-    """
-    w_path = [1.0]   # 1.0 is the initial size
-    c_path = []
-    
     w = 1.0
     for t in range(T):
+
+        # Update optimal path
         c = κ * w
-        c_path.append(c)
+        c_opt.append(c)
         w = R * (w - c)
-        w_path.append(w)
+        w_opt.append(w)
         
         if w <= 1e-10:
             break
     
-    return w_path, c_path
+    return w_sim, c_sim, w_opt, c_opt
 
 
 # Simulate and plot path
-w_sim, c_sim = simulate_consumption_path(params)
-w_opt, c_opt = compute_optimal_path()
+w_sim, c_sim, w_opt, c_opt = simulate_consumption_path(params)
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-ax1.plot(w_sim, lw=2, linestyle='--', label='policy-based')
+ax1.plot(w_sim, lw=4, linestyle='--', label='policy-based')
 ax1.plot(w_opt, lw=2, label='optimal')
 ax1.set_xlabel('Time')
 ax1.set_ylabel('Cake size')
 ax1.set_title('Cake size over time')
 ax1.legend()
 
-ax2.plot(c_sim, lw=2, linestyle='--', label='policy-based')
+ax2.plot(c_sim, lw=4, linestyle='--', label='policy-based')
 ax2.plot(c_opt, lw=2, label='optimal')
 ax2.set_xlabel('Time')
 ax2.set_ylabel('Consumption')
