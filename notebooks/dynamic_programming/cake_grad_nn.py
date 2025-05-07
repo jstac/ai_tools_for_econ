@@ -56,7 +56,6 @@ class Config:
     """
     seed = 42
     epochs = 500
-    n_paths = 5_000
     path_length = 1000
     layer_sizes = 1, 8, 8, 1
     init_lr = 0.0015
@@ -121,9 +120,10 @@ def u(c, γ):
     return c**(1 - γ) / (1 - γ)
 
 
-def simulate_path(params, key):
+def compute_lifetime_value(params):
     """
-    Simulate one path and return its present value.
+    Generate a path associated with the policy embedded in params
+    and return its lifetime value.
 
     """
     def update(t, state):
@@ -148,22 +148,16 @@ def simulate_path(params, key):
         )
     return final_value
 
-# Vectorized simulation for multiple paths
-simulate_paths = jax.vmap(simulate_path, in_axes=(None, 0))
 
 # Estimate policy value by averaging multiple paths
 @jit
-def loss_function(params, key):
+def loss_function(params):
     """
-    The loss function is minus the estimated lifetime value of a policy
-    identified by params, computed using Monte Carlo sampling via rollouts.
+    The loss function is minus the lifetime value of a policy
+    identified by params.
 
     """
-    keys = random.split(key, n_paths)
-    # Compute lifetime values across many paths
-    values = simulate_paths(params, keys)
-    # Loss is negative of mean
-    return - jnp.mean(values)
+    return - compute_lifetime_value(params)
 
 
 def create_lr_schedule():
@@ -192,7 +186,7 @@ def create_lr_schedule():
 
 γ, β, R = Model.γ, Model.β, Model.R
 seed, epochs = Config.seed, Config.epochs
-n_paths, path_length = Config.n_paths, Config.path_length
+path_length = Config.path_length
 layer_sizes = Config.layer_sizes
 
 # Test stability
@@ -220,10 +214,9 @@ value_history = []
 
 # Training loop
 for i in range(epochs):
-    key = random.PRNGKey(i)
     
     # Compute value and gradients at existing parameterization
-    loss, grads = jax.value_and_grad(loss_function)(params, key)
+    loss, grads = jax.value_and_grad(loss_function)(params)
     lifetime_value = - loss
     
     # Update parameters using optimizer
