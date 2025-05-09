@@ -1,59 +1,59 @@
----
-jupytext:
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.16.7
-kernelspec:
-  display_name: Python 3 (ipykernel)
-  language: python
-  name: python3
----
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.16.7
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
 
-# Policy Gradient-Based Deterministic Optimal Savings
+# # Policy Gradient-Based Deterministic Optimal Savings
+#
+# Author: [John Stachurski](https://johnstachurski.net)
+#
+# ## Introduction
+#
+# In this notebook we solve a deterministic infinite horizon optimal savings
+# problem using policy gradient ascent with JAX. 
+#
+# Each policy is represented as a multi-layer perceptron (MLP).
+#
+# Utility takes the CRRA form $u(c) = c^{1-\gamma} / (1-\gamma)$ and the discount factor is $\beta$.
+#
+# Wealth evolves according to 
+#
+# $$
+#     w' = R (w - c) 
+# $$
+#
+# where $R > 0$ is the gross interest rate.  
+#
+# To ensure stability we check that $\beta R^{1-\gamma} < 1$.
+#
+# For this model, it is known that the optimal policy is $c = \kappa w$, where
+#
+# $$
+#     \kappa := 1 - [\beta R^{1-\gamma}]^{1/\gamma}
+# $$
+#
+# We use this known exact solution to check our numerical methods.
+#
+# Initial wealth is fixed at 1.0 and the objective function is
+#
+# $$
+#     \max_{\sigma \in \Sigma} v_\sigma(1.0)
+# $$
+#
+# Here $\Sigma$ is the set of all feasible policies and $v_\sigma(w)$ is the lifetime
+# value of following stationary policy $\sigma$, given initial wealth $w$.
+#
+# We begin with some imports
 
-Author: [John Stachurski](https://johnstachurski.net)
-
-## Introduction
-
-In this notebook we solve a deterministic infinite horizon optimal savings
-problem using policy gradient ascent with JAX. 
-
-Each policy is represented as a multi-layer perceptron (MLP).
-
-Utility takes the CRRA form $u(c) = c^{1-\gamma} / (1-\gamma)$ and the discount factor is $\beta$.
-
-Wealth evolves according to 
-
-$$
-    w' = R (w - c) 
-$$
-
-where $R > 0$ is the gross interest rate.  
-
-To ensure stability we check that $\beta R^{1-\gamma} < 1$.
-
-For this model, it is known that the optimal policy is $c = \kappa w$, where
-
-$$
-    \kappa := 1 - [\beta R^{1-\gamma}]^{1/\gamma}
-$$
-
-We use this known exact solution to check our numerical methods.
-
-Initial wealth is fixed at 1.0 and the objective function is
-
-$$
-    \max_{\sigma \in \Sigma} v_\sigma(1.0)
-$$
-
-Here $\Sigma$ is the set of all feasible policies and $v_\sigma(w)$ is the lifetime
-value of following stationary policy $\sigma$, given initial wealth $w$.
-
-We begin with some imports
-
-```{code-cell} ipython3
 import jax
 import jax.numpy as jnp
 from jax import grad, jit, random
@@ -61,13 +61,12 @@ import optax
 import matplotlib.pyplot as plt
 from functools import partial
 from typing import NamedTuple
-```
 
-## Set up
 
-We use a class called `Model` to store model parameters.
+# ## Set up
+#
+# We use a class called `Model` to store model parameters.
 
-```{code-cell} ipython3
 class Model(NamedTuple):
     """
     Stores parameters for the model.
@@ -76,12 +75,11 @@ class Model(NamedTuple):
     γ = 2.0
     β = 0.95
     R = 1.01
-```
 
-We use a class called `LayerParams` to store parameters representing a single
-layer of the neural network.
 
-```{code-cell} ipython3
+# We use a class called `LayerParams` to store parameters representing a single
+# layer of the neural network.
+
 class LayerParams(NamedTuple):
     """
     Stores parameters for one layer of the neural network.
@@ -89,14 +87,13 @@ class LayerParams(NamedTuple):
     """
     W: jnp.ndarray     # weights
     b: jnp.ndarray     # biases
-```
 
-The next class stores some fixed values that form part of the network training
-configuration.
 
-(Putting them inside a class helps to keep the global namespace clean.)
+# The next class stores some fixed values that form part of the network training
+# configuration.
+#
+# (Putting them inside a class helps to keep the global namespace clean.)
 
-```{code-cell} ipython3
 class Config:
     """
     Configuration and parameters for training the neural network.
@@ -110,14 +107,13 @@ class Config:
     min_lr = 0.0001
     warmup_steps = 100
     decay_steps = 300
-```
 
-The following function initializes a single layer of the network using Le Cun
-initialization.
 
-(Le Cun initialization is reported to pair well with `selu` activation.)
+# The following function initializes a single layer of the network using Le Cun
+# initialization.
+#
+# (Le Cun initialization is reported to pair well with `selu` activation.)
 
-```{code-cell} ipython3
 def initialize_layer(in_dim, out_dim, key):
     """
     Initialize weights and biases for a single layer of a feedforward network.
@@ -128,12 +124,11 @@ def initialize_layer(in_dim, out_dim, key):
     W = jax.random.normal(key, (in_dim, out_dim)) * s
     b = jnp.ones((out_dim,))
     return W, b
-```
 
-The next function builds an entire network, as represented by its parameters, by
-initializing layers and stacking them into a list.
 
-```{code-cell} ipython3
+# The next function builds an entire network, as represented by its parameters, by
+# initializing layers and stacking them into a list.
+
 def initialize_network(key, layer_sizes):
     """
     Build a network by initializing all of the parameters.
@@ -152,12 +147,11 @@ def initialize_network(key, layer_sizes):
         params.append(layer)
 
     return params
-```
 
-Now we provide a function to do a forward pass through the network, given the
-parameters.
 
-```{code-cell} ipython3
+# Now we provide a function to do a forward pass through the network, given the
+# parameters.
+
 def forward(params, w):
     """
     Evaluate neural network policy: maps wealth to consumption rate c/w
@@ -174,22 +168,21 @@ def forward(params, w):
     x = jax.nn.sigmoid(x @ W + b)
     consumption_rate = x[0]
     return consumption_rate
-```
 
-We use CRRA utility.
 
-```{code-cell} ipython3
+# We use CRRA utility.
+
 def u(c, γ):
     """ Utility function. """
     c = jnp.maximum(c, 1e-10)
     return c**(1 - γ) / (1 - γ)
-```
 
-The next function computes lifetime value associated with a given policy, as
-represented by the parameters of a neural network.
 
-```{code-cell} ipython3
-@partial(jax.jit, static_argnames=('path_length'))
+# The next function computes lifetime value associated with a given policy, as
+# represented by the parameters of a neural network.
+
+# +
+#@partial(jax.jit, static_argnames=('path_length'))
 def compute_lifetime_value(params, model, path_length):
     """
     Generate a path associated with the policy embedded in params
@@ -219,23 +212,26 @@ def compute_lifetime_value(params, model, path_length):
             0, path_length, update, initial_state
         )
     return final_value
-```
 
-Here's the loss function we will minimize.
+compute_lifetime_value = jax.jit(compute_lifetime_value, static_argnums=(1, 2))
 
 
-The loss function is minus the lifetime value of a policy identified by `params`.
+# -
 
-```{code-cell} ipython3
+# Here's the loss function we will minimize.
+#
+#
+# The loss function is minus the lifetime value of a policy identified by `params`.
+
+@jit
 def loss_function(params, model, path_length):
 
     return - compute_lifetime_value(params, model, path_length)
-```
 
-We create a standard Optax learning rate scheduler, which controls the time path
-of the learning parameter over the process of gradient descent.
 
-```{code-cell} ipython3
+# We create a standard Optax learning rate scheduler, which controls the time path
+# of the learning parameter over the process of gradient descent.
+
 def create_lr_schedule():
     warmup_fn = optax.linear_schedule(
         init_value=0.0,
@@ -254,59 +250,49 @@ def create_lr_schedule():
         schedules=[warmup_fn, decay_fn],
         boundaries=[Config.warmup_steps]
     )
-```
 
-## Train and solve 
 
-First we unpack names
+# ## Train and solve 
+#
+# First we unpack names
 
-```{code-cell} ipython3
 model = Model()
 γ, β, R = model.γ, model.β, model.R
 seed, epochs = Config.seed, Config.epochs
 path_length = Config.path_length
 layer_sizes = Config.layer_sizes
-```
 
-We quickly test stability.
+# We quickly test stability.
 
-```{code-cell} ipython3
 # Test stability
 assert β * R**(1 - γ) < 1, "Parameters fail stability test."
-```
 
-We compute optimal consumption rate and lifetime value.
+# We compute optimal consumption rate and lifetime value.
 
-```{code-cell} ipython3
 κ = 1 - (β * R**(1 - γ))**(1/γ)
 v_max = κ**(-γ) * u(1.0, γ)
 print(f"Maximum possible lifetime value = {v_max}.\n")
-```
 
-Let's now set up the Optax minimizer, using Adam.
+# Let's now set up the Optax minimizer, using Adam.
 
-```{code-cell} ipython3
 # Optimizer
 lr_schedule = create_lr_schedule()
 optimizer = optax.chain(
     optax.clip_by_global_norm(1.0),  # Gradient clipping for stability
     optax.adam(learning_rate=lr_schedule)
 )
-```
 
-We initialize the parameters in the neural network and the state of the
-optimizer.
+# We initialize the parameters in the neural network and the state of the
+# optimizer.
 
-```{code-cell} ipython3
 # Initialize neural network parameters
 key = random.PRNGKey(seed)
 params = initialize_network(key, layer_sizes)
 opt_state = optimizer.init(params)
-```
 
-Now let's train the network.
+# Now let's train the network.
 
-```{code-cell} ipython3
+# +
 value_history = []
 for i in range(epochs):
     
@@ -326,11 +312,10 @@ for i in range(epochs):
 
 
 print(f"\nFinal value: {value_history[-1]:.4f}")
-```
+# -
 
-First we plot the evolution of lifetime value over the epochs.
+# First we plot the evolution of lifetime value over the epochs.
 
-```{code-cell} ipython3
 # Plot learning progress
 fig, ax = plt.subplots()
 ax.plot(value_history, 'b-', linewidth=2)
@@ -338,11 +323,9 @@ ax.set_xlabel('iteration')
 ax.set_ylabel('policy value')
 ax.set_title('learning progress')
 plt.show()
-```
 
-Next we compare the learned and optimal policies.
+# Next we compare the learned and optimal policies.
 
-```{code-cell} ipython3
 w_grid = jnp.linspace(0.01, 1.0, 1000)
 policy_vmap = jax.vmap(lambda w: forward(params, w))
 consumption_rate = policy_vmap(w_grid)
@@ -352,18 +335,17 @@ ax.plot(w_grid, κ * jnp.ones(len(w_grid)), lw=2, label='optimal')
 ax.set_xlabel('wealth')
 ax.set_ylabel('consumption rate (c/w)')
 ax.set_title('Consumption rate')
-ax.set_ylim((0, 0.1))
+ax.set_ylim((0, 0.2))
 ax.legend()
 plt.show()
-```
-
-Let's have a look at paths for consumption and wealth under the learned and
-optimal policies.
 
 
-The figures below show that the learned policies are close to optimal.
+# Let's have a look at paths for consumption and wealth under the learned and
+# optimal policies.
+#
+#
+# The figures below show that the learned policies are close to optimal.
 
-```{code-cell} ipython3
 def simulate_consumption_path(params, T=120):
     """
     Compute consumption path using neural network policy identified by params.
@@ -399,14 +381,11 @@ def simulate_consumption_path(params, T=120):
             break
     
     return w_sim, c_sim, w_opt, c_opt
-```
 
-```{code-cell} ipython3
+
 # Simulate and plot path
 w_sim, c_sim, w_opt, c_opt = simulate_consumption_path(params)
-```
 
-```{code-cell} ipython3
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
 ax1.plot(w_sim, lw=4, linestyle='--', label='learned policy')
@@ -425,8 +404,3 @@ ax2.legend()
 
 plt.tight_layout()
 plt.show()
-```
-
-```{code-cell} ipython3
-
-```

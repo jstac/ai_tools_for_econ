@@ -6,36 +6,34 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.16.7
 kernelspec:
-  display_name: Python
-  language: python3
+  display_name: Python 3 (ipykernel)
+  language: python
   name: python3
 ---
 
 # Job Search
 
-+++
+Note: This lecture was built using a machine with JAX installed and access to a
+GPU.
 
-# GPU
+To run this lecture on [Google Colab](https://colab.research.google.com/), click
+on the “play” icon top right, select Colab, and set the runtime environment to
+include a GPU.
 
-This lecture was built using a machine with JAX installed and access to a GPU.
 
-To run this lecture on [Google Colab](https://colab.research.google.com/), click on the “play” icon top right, select Colab, and set the runtime environment to include a GPU.
+## Introduction
 
-To run this lecture on your own machine, you need to install [Google JAX](https://github.com/google/jax).
+In this lecture we study a basic infinite-horizon job search problem with Markov
+wage draws
 
-In this lecture we study a basic infinite-horizon job search problem with Markov wage
-draws
-
->**Note**
->
->For background on infinite horizon job search see, e.g., [DP1](https://dp.quantecon.org/).
+(For background on infinite horizon job search see, e.g., [DP1](https://dp.quantecon.org/).)
 
 The exercise at the end asks you to add risk-sensitive preferences and see how
 the main results change.
 
 In addition to what’s in Anaconda, this lecture will need the following libraries:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 !pip install quantecon
@@ -43,14 +41,14 @@ In addition to what’s in Anaconda, this lecture will need the following librar
 
 We use the following imports.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import matplotlib.pyplot as plt
 import quantecon as qe
 import jax
 import jax.numpy as jnp
-from collections import namedtuple
+from typing import NamedTuple
 
 jax.config.update("jax_enable_x64", True)
 ```
@@ -62,7 +60,7 @@ We study an elementary model where
 - jobs are permanent  
 - unemployed workers receive current compensation $ c $  
 - the horizon is infinite  
-- an unemployment agent discounts the future via discount factor $ \beta \in (0,1) $  
+- an unemployment agent discounts the future via discount factor $ \beta \in (0,1) $
 
 +++
 
@@ -73,7 +71,7 @@ At the start of each period, an unemployed worker receives wage offer $ W_t $.
 To build a wage offer process we consider the dynamics
 
 $$
-W_{t+1} = \rho W_t + \nu Z_{t+1}
+    W_{t+1} = \rho W_t + \nu Z_{t+1}
 $$
 
 where $ (Z_t)_{t \geq 0} $ is IID and standard normal.
@@ -108,19 +106,20 @@ We solve this model using value function iteration.
 
 ## Code
 
-Let’s set up a `namedtuple` to store information needed to solve the model.
+Let’s set up a type to store information needed to solve the model.
 
-```{code-cell}
-:hide-output: false
-
-Model = namedtuple('Model', ('n', 'w_vals', 'P', 'β', 'c'))
+```{code-cell} ipython3
+class Model(NamedTuple): 
+    n: int
+    w_vals: jnp.ndarray
+    P: jnp.ndarray
+    β: float
+    c: float
 ```
 
-The function below holds default values and populates the `namedtuple`.
+The function below fixes default values and generates an instance.
 
-```{code-cell}
-:hide-output: false
-
+```{code-cell} ipython3
 def create_js_model(
         n=500,       # wage grid size
         ρ=0.9,       # wage persistence
@@ -131,48 +130,43 @@ def create_js_model(
     "Creates an instance of the job search model with Markov wages."
     mc = qe.tauchen(n, ρ, ν)
     w_vals, P = jnp.exp(mc.state_values), jnp.array(mc.P)
-    return Model(n, w_vals, P, β, c)
+    return Model(n=n, w_vals=w_vals, P=P, β=β, c=c)
 ```
 
 Let’s test it:
 
-```{code-cell}
-:hide-output: false
-
+```{code-cell} ipython3
 model = create_js_model(β=0.98)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
-model.c
+model.β, model.c
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
-model.β
+model.w_vals.mean()
 ```
 
-```{code-cell}
-:hide-output: false
+Next we implement the Bellman operator, which has the form
 
-model.w_vals.mean()  
-```
+$$
+    (Tv)(w) 
+    = \max
+    \left\{
+            \frac{w}{1-\beta}, c + \beta \sum_{w'} v(w') P(w, w')
+    \right\}
+$$
 
-Here’s the Bellman operator.
-
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 @jax.jit
-def T(v, model):
-    """
-    The Bellman operator Tv = max{e, c + β E v} with 
-
-        e(w) = w / (1-β) and (Ev)(w) = E_w[ v(W')]
-
-    """
+def T(v: jnp.ndarray, model: Model) -> jnp.ndarray:
+    "Bellman operator"
     n, w_vals, P, β, c = model
     h = c + β * P @ v
     e = w_vals / (1 - β)
@@ -195,13 +189,13 @@ $$
 Here $ \mathbf 1 $ is an indicator function.
 
 - $ \sigma(w) = 1 $ means stop  
-- $ \sigma(w) = 0 $ means continue.  
+- $ \sigma(w) = 0 $ means continue.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 @jax.jit
-def get_greedy(v, model):
+def get_greedy(v: jnp.ndarray, model: Model) -> jnp.ndarray:
     "Get a v-greedy policy."
     n, w_vals, P, β, c = model
     e = w_vals / (1 - β)
@@ -212,10 +206,13 @@ def get_greedy(v, model):
 
 Here’s a routine for value function iteration.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
-def vfi(model, max_iter=10_000, tol=1e-4):
+def vfi(model: Model, 
+        max_iter: int = 10_000, 
+        tol: float = 1e-4
+    ) -> tuple[jnp.ndarray]:
     "Solve the infinite-horizon Markov job search model by VFI."
     print("Starting VFI iteration.")
     v = jnp.zeros_like(model.w_vals)    # Initial guess
@@ -237,7 +234,7 @@ def vfi(model, max_iter=10_000, tol=1e-4):
 
 Let’s set up and solve the model.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 model = create_js_model()
@@ -248,7 +245,7 @@ v_star, σ_star = vfi(model)
 
 Here’s the optimal policy:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -260,20 +257,20 @@ plt.show()
 
 We compute the reservation wage as the first $ w $ such that $ \sigma(w)=1 $.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 stop_indices = jnp.where(σ_star == 1)
 stop_indices
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 res_wage_index = min(stop_indices[0])
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 res_wage = w_vals[res_wage_index]
@@ -281,7 +278,7 @@ res_wage = w_vals[res_wage_index]
 
 Here’s a joint plot of the value function and the reservation wage.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -325,10 +322,14 @@ Try to interpret your result.
 
 You can start with the following code:
 
-```{code-cell}
-:hide-output: false
-
-RiskModel = namedtuple('Model', ('n', 'w_vals', 'P', 'β', 'c', 'θ'))
+```{code-cell} ipython3
+class RiskModel(NamedTuple): 
+    n: int
+    w_vals: jnp.ndarray
+    P: jnp.ndarray
+    β: float
+    c: float
+    θ: float
 
 def create_risk_sensitive_js_model(
         n=500,       # wage grid size
@@ -351,26 +352,7 @@ Now you need to modify `T` and `get_greedy` and then run value function iteratio
 
 ## Solution to[ Exercise 10.1](https://jax.quantecon.org/#job_search_1)
 
-```{code-cell}
-:hide-output: false
-
-RiskModel = namedtuple('Model', ('n', 'w_vals', 'P', 'β', 'c', 'θ'))
-
-def create_risk_sensitive_js_model(
-        n=500,       # wage grid size
-        ρ=0.9,       # wage persistence
-        ν=0.2,       # wage volatility
-        β=0.99,      # discount factor
-        c=1.0,       # unemployment compensation
-        θ=-0.1       # risk parameter
-    ):
-    "Creates an instance of the job search model with Markov wages."
-    mc = qe.tauchen(n, ρ, ν)
-    w_vals, P = jnp.exp(mc.state_values), mc.P
-    P = jnp.array(P)
-    return RiskModel(n, w_vals, P, β, c, θ)
-
-
+```{code-cell} ipython3
 @jax.jit
 def T_rs(v, model):
     """
@@ -427,7 +409,7 @@ v_star_rs, σ_star_rs = vfi(model_rs)
 
 Let’s plot the results together with the original risk neutral case and see what we get.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 stop_indices = jnp.where(σ_star_rs == 1)
@@ -435,7 +417,7 @@ res_wage_index = min(stop_indices[0])
 res_wage_rs = w_vals[res_wage_index]
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -454,3 +436,7 @@ The figure shows that the reservation wage under risk sensitive preferences (RS 
 
 This makes sense – the agent does not like risk and hence is more inclined to
 accept the current offer, even when it’s lower.
+
+```{code-cell} ipython3
+
+```
