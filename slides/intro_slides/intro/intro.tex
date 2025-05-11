@@ -1,7 +1,7 @@
-\input{../preamble}
+\unput{../../preamble}
 
 
-\title{An AI-Driven Revolution in Scientific Computing}
+\title{Computational Economics and the AI Revolution}
 
 
 
@@ -19,40 +19,30 @@
 
 
 
-\begin{frame}
-    \frametitle{Topics}
-
-    \brown{Part 1}: Slides
+\begin{frame}{Topics}
 
     \begin{itemize}
-        \item AI-driven scientific computing
+        \item Introduction
         \vspace{0.5em}
-        \item Applications  
+        \item ANNs and deep learning
+        \vspace{0.5em}
+        \item Stochastic approximation
+        \vspace{0.5em}
+        \item Dynamic programming and reinforcement learning
         \vspace{0.5em}
     \end{itemize}
-
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \brown{Part 2}: Hands on coding
-
-
-    \vspace{0.5em}
-
-    \begin{center}
-        \url{add_url}
-    \end{center}
-
 
 \end{frame}
 
 
 
-\begin{frame}
-    \frametitle{AI-driven scientific computing}
+\begin{frame}{AI-driven scientific computing}
 
     AI is changing the world
 
     \begin{itemize}
+        \item generative AI  (LLMs, image / music / video generators)
+        \vspace{0.5em}
         \item image processing / computer vision
         \vspace{0.5em}
         \item speech recognition, translation
@@ -61,7 +51,7 @@
         \vspace{0.5em}
         \item forecasting and prediction 
         \vspace{0.5em}
-        \item generative AI
+        \item etc
     \end{itemize}
 
     \pause
@@ -69,7 +59,7 @@
         \vspace{0.5em}
         \vspace{0.5em}
         \vspace{0.5em}
-    Plus killer drones, skynet, etc.\ldots
+    Plus killer drones, Skynet, etc.\ldots
 
     
 \end{frame}
@@ -87,17 +77,18 @@
         \item UK \$4.5 billion
     \end{itemize}
 
-    Investments in 
+        \vspace{0.5em}
+        \vspace{0.5em}
+    Massive investments in 
 
     \begin{itemize}
-        \item Data centers
+        \item data centers
         \vspace{0.5em}
         \item GPUs
         \vspace{0.5em}
-        \item software development
+        \item software 
     \end{itemize}
 
-    What does this software do?
 
 \end{frame}
 
@@ -132,40 +123,36 @@
             \approx f(x_{n+1})$
     \end{itemize}
 
-
 \end{frame}
 
 
 \begin{frame}
 
-    Nonlinear regression: choose model $\{f_\theta\}_{\theta \in \Theta}$ and minimize the empirical loss
-    %
-    \begin{equation*}
-        \ell(\theta) := \sum_{i=1}^n (y_i - f_\theta(x_i))^2
-        \quad \st \quad \theta \in \Theta
-    \end{equation*}
+    Nonlinear regression: 
+
+    \begin{enumerate}
+        \item Choose function class $\{f_\theta\}_{\theta \in \Theta}$ 
+            \vspace{0.4em}
+        \item Minimize the MSE
+            %
+            \begin{equation*}
+                \ell(\theta) := \sum_{i=1}^n (y_i - f_\theta(x_i))^2
+                \quad \st \quad \theta \in \Theta
+            \end{equation*}
+    \end{enumerate}
 
 
     \pause
     \vspace{0.5em}
-    In the case of ANNs, we consider all $f_\theta$ having the form
-    %
-    \begin{equation*}
-        f_\theta
-        = \sigma \circ A_{m} 
-            \circ \cdots \circ \sigma \circ A_{2}  \circ \sigma \circ A_{1}
-    \end{equation*}
-    %
-    where
-    %
+    In the case of ANNs, elements of $\{f_\theta\}_{\theta \in \Theta}$
+    have a particular structure
+
     \begin{itemize}
-        \item $A_{j} x = W_j x + b_j $ is an affine map 
+        \item We discuss this structure soon
         \vspace{0.5em}
-        \begin{itemize}
-            \item \texttt{output = dot(kernel, input) + bias}
-        \end{itemize}
+        \item Typically, $\theta \mapsto f_\theta(x)$ is smooth for all $x$
         \vspace{0.5em}
-        \item $\sigma$ is a nonlinear ``activation'' function
+        \item MSE is a popular loss function but others are also used
     \end{itemize}
 
 \end{frame}
@@ -254,6 +241,16 @@ loss_gradient = grad(loss)
 \begin{frame}[fragile]
     \frametitle{Parallelization}
 
+    \begin{figure}
+       \begin{center}
+        \scalebox{0.18}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{dgx.png}}
+       \end{center}
+    \end{figure}
+    
+\end{frame}
+
+
+\begin{frame}[fragile]
     
     \begin{minted}{python}
 outputs = pmap(f, data)  
@@ -267,18 +264,6 @@ outputs = pmap(f, data)
         \item multiprocessing over accelerators in a GPU farm / supercomputing
             cluster (how many?)
     \end{itemize}
-
-\end{frame}
-
-
-\begin{frame}
-    
-    \begin{figure}
-       \begin{center}
-        \scalebox{0.18}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{dgx.png}}
-       \end{center}
-    \end{figure}
-
 
 \end{frame}
 
@@ -351,25 +336,34 @@ def f(x):
 
 \begin{frame}
     
-    Popularity
-
+    Popularity -- languages
     
     \begin{figure}
        \begin{center}
-        \scalebox{0.32}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{c.png}}
+        \scalebox{0.62}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{trends.pdf}}
        \end{center}
     \end{figure}
 
-
 \end{frame}
 
+
+\begin{frame}
+    
+    Popularity -- deep learning frameworks
+    
+    \begin{figure}
+       \begin{center}
+        \scalebox{0.62}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{trends_2.pdf}}
+       \end{center}
+    \end{figure}
+
+\end{frame}
 
 
 \begin{frame}
     \frametitle{AI tools for economic modeling}
 
-
-    Let's say that you want to do computational macro rather than deep learning
+    Let's say that you want to do computational economics without deep learning
 
     \vspace{0.5em}
     Can these new AI tools be applied?
@@ -378,7 +372,9 @@ def f(x):
 
     \vspace{0.5em}
     \vspace{0.5em}
-    Yes!
+    \emp{Yes!}
+    \emp{Yes!}
+    \emp{Yes!}
 
     \begin{itemize}
         \item fast matrix algebra
@@ -393,26 +389,6 @@ def f(x):
 
 \end{frame}
 
-
-\begin{frame}
-
-    Advantages of JAX (vs PyTorch / Numba / etc.) for economists:
-    %
-    \begin{itemize}
-        \item exposes low level functions
-            \vspace{0.5em}
-        \item elegant functional programming style -- close to maths
-            \vspace{0.5em}
-        \item elegant autodiff tools
-            \vspace{0.5em}
-        \item array operations follow standard NumPy API
-            \vspace{0.5em}
-        \item automatic parallelization
-            \vspace{0.5em}
-        \item same code, multiple backends (CPUs, GPUs, TPUs)
-    \end{itemize}
-
-\end{frame}
 
 
 \begin{frame}
@@ -439,76 +415,14 @@ def f(x):
 
     \begin{itemize}
         \item runs on \$400 gaming GPU with 10GB RAM
-        \item runtime $=$ 4.17 seconds
+        \item runtime $=$ 7 seconds
     \end{itemize}
 
-\end{frame}
-
-
-\begin{frame}
-    \frametitle{Live coding}
-
-    See notebooks in
-    
-    \begin{center}
-        \url{https://github.com/QuantEcon/rba_workshop_2024}
-    \end{center}
-
-    \vspace{0.5em}
-    Steps
-    %
-    \begin{enumerate}
-    \item Go to Google Colab (\url{https://colab.google/})
-    \vspace{0.5em}
-    \item Open notebook $\to$ GitHub $\to$ quantecon $\to$ \texttt{rba\_workshop\_2024}
-        $\to$ select notebook
-    \vspace{0.5em}
-    \item Edit $\to$ Notebook settings $\to$ select a GPU
-    \vspace{0.5em}
-    \item Shift-enter to run each cell
-    \end{enumerate}
 
 \end{frame}
 
 
-\begin{frame}
-    \frametitle{AI for Coding}
 
-    Intro 
-
-\end{frame}
-
-
-\begin{frame}
-
-    Claude:
-    
-    ``I'm definitely stronger with Python than MATLAB.
-
-    While I'm knowledgeable about both languages, my capabilities with Python
-    are more comprehensive. I have deeper familiarity with Python's extensive
-    ecosystem of libraries, frameworks, and modern development practices. I can
-    more confidently help with advanced Python topics, debugging complex Python
-    code, and implementing Python best practices.''
-
-\end{frame}
-
-
-\begin{frame}
-    
-    Claude:
-
-    ``I'm definitely stronger with Python than Julia.
-
-    Python is one of my most proficient languages - I have deep familiarity with
-    its syntax, libraries, frameworks, and best practices across many domains
-    including data science, web development, machine learning, and
-    general-purpose programming.
-
-    While I understand Julia's syntax and core concepts, my expertise with it
-    isn't as comprehensive as with Python.''
-
-\end{frame}
 
 \end{document}
 

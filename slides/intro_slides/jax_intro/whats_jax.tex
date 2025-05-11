@@ -244,3 +244,25 @@ updated_params = sgd_update(params, grads, 0.01)
 
 \end{frame}
 
+
+\begin{frame}
+
+    Advantages of JAX (vs PyTorch / Numba / etc.) for economists:
+    %
+    \begin{itemize}
+        \item exposes low level functions
+            \vspace{0.5em}
+        \item elegant functional programming style -- close to maths
+            \vspace{0.5em}
+        \item elegant autodiff tools
+            \vspace{0.5em}
+        \item array operations follow standard NumPy API
+            \vspace{0.5em}
+        \item automatic parallelization
+            \vspace{0.5em}
+        \item same code, multiple backends (CPUs, GPUs, TPUs)
+    \end{itemize}
+
+\end{frame}
+
+\end{document}

@@ -1,0 +1,103 @@
+\input{../../preamble}
+
+\title{Artificial Neural Networks}
+
+\author{John Stachurski}
+
+
+\date{2025}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+
+\begin{frame}
+    \frametitle{Topics}
+
+    \begin{itemize}
+        \item Foo
+        \vspace{0.5em}
+        \item Bar
+        \vspace{0.5em}
+    \end{itemize}
+
+\end{frame}
+
+
+
+
+
+\begin{frame}
+    
+    Aim: approximate an unknown functional relationship
+    %
+    \begin{equation*}
+        y = f(x)
+        \qquad (x \in \RR^k, \; y \in \RR)
+    \end{equation*}
+
+    \Egs
+    %
+    \begin{itemize}
+        \item $x = $ cross section of returns, $y = $ return on oil futures tomorrow
+        \vspace{0.5em}
+        \item $x = $ weather sensor data, $y = $ max temp tomorrow
+    \end{itemize}
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+    Problem:
+
+    \begin{itemize}
+        \item observe $(x_i, y_i)_{i=1}^n$ and seek $f$ such that $y_{n+1}
+            \approx f(x_{n+1})$
+    \end{itemize}
+
+
+\end{frame}
+
+
+
+\begin{frame}
+
+    Nonlinear regression: choose model $\{f_\theta\}_{\theta \in \Theta}$ and minimize the empirical loss
+    %
+    \begin{equation*}
+        \ell(\theta) := \sum_{i=1}^n (y_i - f_\theta(x_i))^2
+        \quad \st \quad \theta \in \Theta
+    \end{equation*}
+
+
+    \pause
+    \vspace{0.5em}
+    In the case of ANNs, we consider all $f_\theta$ having the form
+    %
+    \begin{equation*}
+        f_\theta
+        = \sigma \circ A_{m} 
+            \circ \cdots \circ \sigma \circ A_{2}  \circ \sigma \circ A_{1}
+    \end{equation*}
+    %
+    where
+    %
+    \begin{itemize}
+        \item $A_{j} x = W_j x + b_j $ is an affine map 
+        \vspace{0.5em}
+        \begin{itemize}
+            \item $W_j = $ ``weights'' and $b_j = $ ``bias''
+        \end{itemize}
+        \vspace{0.5em}
+        \item $\sigma$ is a nonlinear ``activation'' function
+    \end{itemize}
+
+\end{frame}
+
+
+\end{document}
+
+
