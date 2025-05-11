@@ -246,6 +246,21 @@ updated_params = sgd_update(params, grads, 0.01)
 
 
 \begin{frame}
+    
+    Advantages over NumPy / MATLAB
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item can specialize machine code based on parameter types / shapes
+        \vspace{0.5em}
+        \item automatically matches tasks with accelerators (GPU / TPU)
+        \vspace{0.5em}
+        \item fuses array operations for speed and memory efficiency
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
 
     Advantages of JAX (vs PyTorch / Numba / etc.) for economists:
     %

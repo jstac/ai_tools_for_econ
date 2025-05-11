@@ -1,4 +1,4 @@
-\unput{../../preamble}
+\input{../../preamble}
 
 
 \title{Computational Economics and the AI Revolution}
@@ -28,8 +28,11 @@
         \vspace{0.5em}
         \item Stochastic approximation
         \vspace{0.5em}
-        \item Dynamic programming and reinforcement learning
+        \item Dynamic programming
         \vspace{0.5em}
+        \item Reinforcement learning
+        \vspace{0.5em}
+        \item Economic applications
     \end{itemize}
 
 \end{frame}
@@ -54,18 +57,83 @@
         \item etc
     \end{itemize}
 
-    \pause
-
-        \vspace{0.5em}
-        \vspace{0.5em}
-        \vspace{0.5em}
-    Plus killer drones, Skynet, etc.\ldots
-
     
 \end{frame}
 
+
 \begin{frame}
     
+    \begin{figure}
+       \centering
+       \scalebox{0.24}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{alpha_fold.pdf}}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}\frametitle{AlphaFold}
+
+    \begin{itemize}
+        \item AI system by DeepMind that predicts protein structures
+            \vspace{0.5em}
+        \item Open-sourced code and database for global access
+            \vspace{0.5em}
+        \item Accelerating drug discovery and design
+            \vspace{0.5em}
+        \item Enabling research on diseases like cancer and Alzheimer's
+            \vspace{0.5em}
+        \item Supporting enzyme engineering for sustainability
+    \end{itemize}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+            \vspace{0.5em}
+    2024 Nobel Prize in Chemistry awarded to Demis Hassabis and John
+    Jumper for development of AlphaFold
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{LLMs}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.24}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{llms.png}}
+    \end{figure}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Image Generators}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.3}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{image_gen.pdf}}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Translation Engines}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.42}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{translation.pdf}}
+    \end{figure}
+
+\end{frame}
+
+
+\begin{frame}{Killer drones, Skynet, etc.}
+
+    \begin{figure}
+       \centering
+       \scalebox{0.46}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{terminator.png}}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}{Investment}
 
     Private AI investment in 2024:
 
@@ -84,14 +152,19 @@
     \begin{itemize}
         \item data centers
         \vspace{0.5em}
-        \item GPUs
+        \item GPU design and production
         \vspace{0.5em}
-        \item software 
+        \item software development
     \end{itemize}
-
 
 \end{frame}
 
+
+\begin{frame}
+    
+    What kinds of problems are they trying to solve?
+
+\end{frame}
 
 
 
@@ -109,9 +182,9 @@
     \Egs
     %
     \begin{itemize}
-        \item $x = $ cross section of returns, $y = $ return on oil futures tomorrow
+        \item $x = $ cross section of returns today, $y = $ return on oil futures tomorrow
         \vspace{0.5em}
-        \item $x = $ weather sensor data, $y = $ max temp tomorrow
+        \item $x = $ weather sensor data today, $y = $ max temp tomorrow
     \end{itemize}
         \vspace{0.5em}
         \vspace{0.5em}
@@ -128,12 +201,12 @@
 
 \begin{frame}
 
-    Nonlinear regression: 
+    Deep learning is nonlinear regression: 
 
     \begin{enumerate}
         \item Choose function class $\{f_\theta\}_{\theta \in \Theta}$ 
             \vspace{0.4em}
-        \item Minimize the MSE
+        \item Minimize loss over the parameter space, where
             %
             \begin{equation*}
                 \ell(\theta) := \sum_{i=1}^n (y_i - f_\theta(x_i))^2
@@ -226,13 +299,11 @@ def loss(θ, x, y):
   return jnp.sum((y - f(θ, x))**2)
 
 loss_gradient = grad(loss)
+dθ = loss_gradient(θ, x_data, y_data)
+θ = θ - λ * dθ
 
     \end{minted}
 
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \vspace{0.5em}
-    Now use gradient descent\ldots
 
 
 \end{frame}
@@ -293,21 +364,6 @@ def f(x):
 \end{frame}
 
 
-\begin{frame}
-    
-    Advantages over NumPy / MATLAB
-
-    \vspace{0.5em}
-    \begin{itemize}
-        \item can specialize machine code based on parameter types / shapes
-        \vspace{0.5em}
-        \item automatically matches tasks with accelerators (GPU / TPU)
-        \vspace{0.5em}
-        \item fuses array operations for speed and memory efficiency
-    \end{itemize}
-
-\end{frame}
-
 
 \begin{frame}
     \frametitle{Platforms}
@@ -356,6 +412,71 @@ def f(x):
         \scalebox{0.62}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{trends_2.pdf}}
        \end{center}
     \end{figure}
+
+\end{frame}
+
+
+
+\begin{frame}{AI for coding}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.36}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{code_ai.pdf}}
+    \end{figure}
+
+\end{frame}
+
+
+\begin{frame}{Affects language choice}
+    
+    ``I'm definitely stronger with Python than MATLAB.''
+
+    \vspace{0.5em}
+    ``My capabilities with Python
+    are more comprehensive. I have deeper familiarity with Python's extensive
+    ecosystem of libraries, frameworks, and modern development practices.''
+
+
+    \vspace{0.5em}
+    ``I can
+    more confidently help with advanced Python topics, debugging complex Python
+    code, and implementing Python best practices.''
+
+\end{frame}
+
+\begin{frame}
+    
+    ``I'm definitely stronger with Python than Julia.''
+
+    \vspace{0.5em}
+    ``Python is one of my most proficient languages - I have deep familiarity with
+    its syntax, libraries, frameworks, and best practices across many domains
+    including data science, web development, machine learning, and
+    general-purpose programming.''
+
+    \vspace{0.5em}
+    ``While I understand Julia's syntax and core concepts, my expertise with it
+    isn't as comprehensive as with Python.''
+
+\end{frame}
+
+\begin{frame}
+
+    Thoughts from professional developer \texttt{Lonely-Public2655}
+
+    \begin{itemize}
+        \item AI doesn't see the big picture 
+        \vspace{0.5em}
+        \item Can ace small tasks but struggles to connect them meaningfully
+        \vspace{0.5em}
+        \item You still need to be the architect
+        \vspace{0.5em}
+        \item Context is fragile: AI forgets. A lot.
+        \vspace{0.5em}
+        \item Once things get weird, AI starts guessing
+        \vspace{0.5em}
+        \item Sometimes AI gets really weird 
+    \end{itemize}
 
 \end{frame}
 
@@ -420,7 +541,6 @@ def f(x):
 
 
 \end{frame}
-
 
 
 
