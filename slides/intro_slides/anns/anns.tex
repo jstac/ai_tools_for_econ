@@ -357,6 +357,196 @@
 
 \end{frame}
 
+
+\begin{frame}{What about overfitting?}
+    
+
+\end{frame}
+
+\begin{frame}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.3}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{overfit.pdf}}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}
+    
+    \begin{tikzpicture}
+    \begin{axis}[
+        width=10cm,
+        height=6.6cm,
+        xlabel={model complexity},
+        ylabel={loss},
+        xmin=0, xmax=10,
+        ymin=0, ymax=1,
+        xticklabels={,,,,,,,,,,},
+        yticklabels={,,,,,},
+        ylabel near ticks,
+        xlabel near ticks,
+        legend style={at={(0.97,0.03)}, anchor=south east, draw=none, fill=white, fill opacity=0.7, text opacity=1},
+        grid=both,
+        grid style={line width=.1pt, draw=gray!10},
+        major grid style={line width=.2pt,draw=gray!50},
+        every axis plot/.append style={thick},
+        title={Overfitting and underfitting},
+        title style={font=\large},
+        domain=0:10,
+        smooth,
+    ]
+
+    % Training error curve (monotonically decreasing)
+    \addplot[color=blue, line width=2pt, name path=training] {0.9*exp(-0.35*x) + 0.1};
+
+    % Test error curve (U-shaped)
+    \addplot[color=red, line width=2pt, name path=test] {0.4*exp(-0.7*x) + 0.15*exp(0.35*(x-5)) + 0.12};
+
+    % curve labels
+    \node[color=blue, font=\small\bfseries] at (8,0.25) {training loss};
+    \node[color=red, font=\small\bfseries] at (7,0.65) {test loss};
+
+    % Underfitting and overfitting regions
+    \draw[<->, >=stealth, gray, line width=1pt] (3.2,0.8) -- (0.2,0.8);
+    \node[align=center, gray, font=\small\bfseries] at (1.9, 0.9) {underfitting};
+
+    \draw[<->, >=stealth, gray, line width=1pt] (6.3,0.8) -- (9.8,0.8);
+    \node[align=center, gray, font=\small\bfseries] at (8, 0.9) {overfitting};
+
+    % Fill regions
+    \path[name path=axis] (axis cs:0,0) -- (axis cs:10,0);
+    \addplot[blue!10, opacity=0.5] fill between[of=axis and training, soft clip={domain=0:3.2}];
+    \addplot[red!10, opacity=0.5] fill between[of=axis and test, soft clip={domain=3.2:10}];
+
+    \end{axis}
+
+    \end{tikzpicture}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    If production-level deep learning models are so large, why don't they
+    overfit data?
+
+    Some solutions don't use the full complexity of the model
+
+    \begin{itemize}
+        \item Early stopping halts training when validation performance begins to decline
+        \item Many architectures include random drop out -- randomly shut down neurons
+            during training
+    \end{itemize}
+
+
+    The insight behind dropout - introducing randomness can prevent overfitting -
+    has influenced other regularization techniques in deep learning, such
+    as DropConnect and Stochastic Depth
+
+\end{frame}
+
+\begin{frame}
+    
+    Also, modern architectures have inductive biases that guide learning toward useful patterns
+
+    \begin{itemize}
+        \item translation invariance in CNNs (same pattern can be
+            recognized anywhere in an image)
+        \item parameter sharing in CNNs -- using the same weights across different parts
+            of the image -- enforces learning of features that are useful everywhere
+        \item parameter sharing in RNNs -- similarity of transformations across
+            time
+        \item Markovian assumption in RNNs 
+        \item Layer normalization and residual connections in transformers -
+            create a bias toward stable training dynamics and information preservation across layers.
+    \end{itemize}
+    
+\end{frame}
+
+
+\begin{frame}
+    
+    Finally, there is some evidence of ``double descent'' -- test error starts to fall again
+    when the number of parameters is very high
+
+\end{frame}
+
+
+\begin{frame}
+    
+    \begin{tikzpicture}
+    \begin{axis}[
+        width=10cm,
+        height=7cm,
+        xlabel={number of parameters},
+        ylabel={loss},
+        xmin=0, xmax=15,
+        ymin=0, ymax=1.2,
+        xtick={2.5,7.5,12.5},
+        xticklabels={low, med, high},
+        ytick={0,0.2,0.4,0.6,0.8,1.0,1.2},
+        ylabel near ticks,
+        xlabel near ticks,
+        legend style={at={(0.97,0.03)}, anchor=south east, draw=none, fill=white, fill opacity=0.8},
+        grid=major,
+        grid style={line width=.2pt, draw=gray!30},
+        every axis plot/.append style={thick},
+        title={Double descent phenomenon},
+        title style={font=\large},
+        domain=0:15,
+        smooth,
+    ]
+
+    % Define interpolation threshold with vertical line
+    \addplot[dashed, black, line width=1pt] coordinates {(7.5, 0) (7.5, 1.2)};
+    \node[align=center, text width=3cm, font=\small] at (9.5, 1.1) {interpolation threshold};
+
+    % Training error curve
+    \addplot[color=blue, line width=2pt] coordinates {
+        (0, 1.0)
+        (2, 0.7)
+        (4, 0.45)
+        (6, 0.25)
+        (7, 0.1)
+        (7.5, 0.02)
+        (8, 0.015)
+        (10, 0.01)
+        (15, 0.005)
+    };
+
+    % Test error with double descent
+    \addplot[color=red, line width=2pt] coordinates {
+        (0, 1.0)
+        (2, 0.7)
+        (4, 0.4)
+        (6, 0.3)
+        (7, 0.35)
+        (7.5, 0.9)
+        (8, 0.7)
+        (9, 0.5)
+        (11, 0.28)
+        (13, 0.2)
+        (15, 0.3)
+    };
+
+    % Labels
+    \node[color=blue, font=\small\bfseries] at (12,0.1) {training loss};
+    \node[color=red, font=\small\bfseries] at (12,0.4) {test loss};
+
+    % Label the critical regions
+    \node[align=center, font=\small] at (4, 0.1) {classical\\sweet spot};
+
+    % Arrow pointing to the classic minimum
+    \draw[-stealth, black, line width=0.8pt] (4,0.2) -- (4,0.38);
+
+    \end{axis}
+    \end{tikzpicture}
+
+\end{frame}
+
+
+
 \end{document}
 
 
