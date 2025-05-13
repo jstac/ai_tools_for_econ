@@ -43,20 +43,21 @@
 
 \begin{frame}{The AI revolution}
 
-    AI is changing the world
 
     \begin{itemize}
-        \item generative AI  (LLMs, image / music / video generators)
+        \item generative AI  (LLMs, image / music / video)
         \vspace{0.5em}
         \item image processing / computer vision
         \vspace{0.5em}
-        \item speech recognition, translation
+        \item speech recognition
+        \vspace{0.5em}
+        \item translation
         \vspace{0.5em}
         \item scientific knowledge discovery
         \vspace{0.5em}
         \item forecasting and prediction 
         \vspace{0.5em}
-        \item etc
+        \item etc.
     \end{itemize}
 
     
@@ -219,8 +220,7 @@
 
 
 
-\begin{frame}
-    \frametitle{Deep learning in two slides}
+\begin{frame}{Statistical learning (induction)}
     
     We observe input-output pairs $(x, y)$, where
     %
@@ -249,9 +249,9 @@
 \end{frame}
 
 
-\begin{frame}
+\begin{frame}{Deep Learning (DL)}
 
-    Deep learning (DL) is nonlinear regression: 
+    Training:
 
     \begin{enumerate}
         \item Choose function class $\{f_\theta\}_{\theta \in \Theta}$ 
@@ -327,13 +327,13 @@
 
     Core elements
     %
-    \begin{itemize}
+    \begin{enumerate}
         \item parallelization over powerful hardware (GPUs or TPUs)
         \vspace{0.5em}
         \item automatic differentiation (for \underline{gradient} descent)
         \vspace{0.5em}
-        \item Compilers / JIT-compilers
-    \end{itemize}
+        \item Compilers / JIT-compilers for fast parallized machine code
+    \end{enumerate}
 
 \end{frame}
 
@@ -381,6 +381,32 @@ outputs = parallel_function(data_sets)
 
 \end{frame}
 
+\begin{frame}
+
+    \textbf{\brown{Note: Full GPU-Python integration is on the way!}}
+    
+    \vspace{0.5em}
+    At GTC 2025, NVIDIA announced native support and full integration of Python in its CUDA toolkit
+
+
+    \vspace{0.5em}
+    Over the last year, NVIDIA made CUDA Core -- a ``Pythonic
+    reimagining of the CUDA runtime to be naturally and natively Python.''
+
+    \vspace{0.5em}
+    Coders can use natural Python interfaces and the scripting model of calling
+    functions and libraries to create AI programs for execution on NVIDIA
+    GPUs
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+
+    \footnotesize{
+        \url{https://thenewstack.io/nvidia-finally-adds-native-python-support-to-cuda/}
+    }
+
+\end{frame}
 
 
 \begin{frame}[fragile]
@@ -390,6 +416,10 @@ outputs = parallel_function(data_sets)
     ``Exact numerical'' differentiation
     
     \begin{minted}{python}
+from jax import grad
+
+def f(θ, x):
+    # add details here
 
 def loss(θ, x, y):
   return jnp.sum((y - f(θ, x))**2)
@@ -409,7 +439,7 @@ d = loss_gradient(θ, x_data, y_data)
     \vspace{0.5em}
     
     \begin{minted}{python}
-@jit
+@jax.jit
 def f(x):
     return jnp.sin(x) - jnp.cos(x**2)
     \end{minted}
@@ -422,6 +452,8 @@ def f(x):
         \item cleaner code
     \vspace{0.5em}
         \item more portable
+    \vspace{0.5em}
+        \item lower compile times
     \vspace{0.5em}
         \item automatic parallelization (same code for CPUs / GPUs)
     \end{itemize}
@@ -457,7 +489,7 @@ def f(x):
 
 \begin{frame}
     
-    Popularity -- languages
+    Popularity -- languages and libraries
     
     \begin{figure}
        \begin{center}
@@ -470,7 +502,7 @@ def f(x):
 
 \begin{frame}
     
-    Popularity -- deep learning frameworks
+    Popularity -- DL / ML frameworks
     
     \begin{figure}
        \begin{center}
