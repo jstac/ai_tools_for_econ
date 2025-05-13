@@ -21,10 +21,12 @@
 
 \begin{frame}{Topics}
 
-    \begin{itemize}
+    \begin{enumerate}
         \item Introduction
         \vspace{0.5em}
         \item ANNs and deep learning
+        \vspace{0.5em}
+        \item ML and deep learning frameworks (programming)
         \vspace{0.5em}
         \item Stochastic approximation
         \vspace{0.5em}
@@ -33,13 +35,13 @@
         \item Reinforcement learning
         \vspace{0.5em}
         \item Economic applications
-    \end{itemize}
+    \end{enumerate}
 
 \end{frame}
 
 
 
-\begin{frame}{An AI revolution}
+\begin{frame}{The AI revolution}
 
     AI is changing the world
 
@@ -73,9 +75,11 @@
 \begin{frame}\frametitle{AlphaFold}
 
     \begin{itemize}
-        \item AI system by DeepMind that predicts protein structures
+        \item AI system by DeepMind 
             \vspace{0.5em}
-        \item Open-sourced code and database for global access
+        \item Predicts 3D protein structures
+            \vspace{0.5em}
+        \item Open-sourced code and database 
             \vspace{0.5em}
         \item Accelerating drug discovery and design
             \vspace{0.5em}
@@ -107,7 +111,7 @@
     
     \begin{figure}
        \centering
-       \scalebox{0.32}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{llms.pdf}}
+       \scalebox{0.34}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{llms.pdf}}
     \end{figure}
 
 \end{frame}
@@ -198,7 +202,7 @@
     \begin{itemize}
         \item data centers
         \vspace{0.5em}
-        \item GPU design and production
+        \item server / GPU / TPU design and production
         \vspace{0.5em}
         \item software development
     \end{itemize}
@@ -218,12 +222,12 @@
 \begin{frame}
     \frametitle{Deep learning in two slides}
     
-    Aim: approximate an unknown functional relationship
+    We observe input-output pairs $(x, y)$, where
     %
-    \begin{equation*}
-        y = f(x)
-        \qquad (x \in \RR^k, \; y \in \RR)
-    \end{equation*}
+    \begin{itemize}
+        \item $x \in \RR^k$
+        \item $y \in \RR$  (for example)
+    \end{itemize}
 
     \Egs
     %
@@ -247,12 +251,12 @@
 
 \begin{frame}
 
-    Deep learning is nonlinear regression: 
+    Deep learning (DL) is nonlinear regression: 
 
     \begin{enumerate}
         \item Choose function class $\{f_\theta\}_{\theta \in \Theta}$ 
             \vspace{0.4em}
-        \item Minimize loss over the parameter space, where
+        \item Minimize loss 
             %
             \begin{equation*}
                 \ell(\theta) := \sum_{i=1}^n (y_i - f_\theta(x_i))^2
@@ -263,11 +267,11 @@
 
     \pause
     \vspace{0.5em}
-    In the case of ANNs, elements of $\{f_\theta\}_{\theta \in \Theta}$
+    In the case of DL, elements of $\{f_\theta\}_{\theta \in \Theta}$
     have a particular structure
 
     \begin{itemize}
-        \item we discuss this structure soon
+        \item each $f_\theta$ is a neural net --- we discuss more soon
         \vspace{0.5em}
         \item typically, $\theta \mapsto f_\theta(x)$ is smooth for all $x$
         \vspace{0.5em}
@@ -324,36 +328,14 @@
     Core elements
     %
     \begin{itemize}
-        \item automatic differentiation (for \underline{gradient} descent)
+        \item parallelization over powerful hardware (GPUs or TPUs)
         \vspace{0.5em}
-        \item parallelization (GPUs or TPUs)
+        \item automatic differentiation (for \underline{gradient} descent)
         \vspace{0.5em}
         \item Compilers / JIT-compilers
     \end{itemize}
 
 \end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Automatic differentiation}
-
-    \vspace{0.5em}
-    ``Exact numerical'' differentiation
-    
-    \begin{minted}{python}
-
-def loss(θ, x, y):
-  return jnp.sum((y - f(θ, x))**2)
-
-loss_gradient = grad(loss)
-dθ = loss_gradient(θ, x_data, y_data)
-θ = θ - λ * dθ
-
-    \end{minted}
-
-
-
-\end{frame}
-
 
 \begin{frame}[fragile]
     \frametitle{Parallelization}
@@ -367,14 +349,14 @@ dθ = loss_gradient(θ, x_data, y_data)
 \end{frame}
 
 
+
 \begin{frame}[fragile]
 
-    Multithreading and multiprocessing
-
+    \emp{Multithreading} and \emp{multiprocessing}
 
     \vspace{0.5em}
     \begin{itemize}
-        \item Multithreading over GPU cores / compute units (how many?)
+        \item Multithreading over GPU cores / compute units 
     \end{itemize}
     
     \begin{minted}{python}
@@ -397,7 +379,26 @@ parallel_function = pmap(function)
 outputs = parallel_function(data_sets)  
     \end{minted}
 
+\end{frame}
 
+
+
+\begin{frame}[fragile]
+    \frametitle{Automatic differentiation}
+
+    \vspace{0.5em}
+    ``Exact numerical'' differentiation
+    
+    \begin{minted}{python}
+
+def loss(θ, x, y):
+  return jnp.sum((y - f(θ, x))**2)
+
+loss_gradient = grad(loss)
+d = loss_gradient(θ, x_data, y_data)
+θ = θ - λ * d
+
+    \end{minted}
 
 \end{frame}
 
@@ -490,6 +491,33 @@ def f(x):
 
 \end{frame}
 
+\begin{frame}
+    
+    AI code generation is great\ldots but not perfect
+
+\end{frame}
+
+
+\begin{frame}
+
+    Thoughts from pro developer \brown{\texttt{Lonely-Public2655}}
+
+    \begin{itemize}
+        \item AI doesn't see the big picture
+        \vspace{0.5em}
+        \item Can ace small tasks but struggles to connect them meaningfully
+        \vspace{0.5em}
+        \item \brown{You still need to be the architect}
+        \vspace{0.5em}
+        \item Context is fragile: AI forgets
+        \vspace{0.5em}
+        \item Once things get weird, AI starts guessing
+        \vspace{0.5em}
+        \item Sometimes AI gets really weird
+    \end{itemize}
+
+\end{frame}
+
 
 \begin{frame}{AI coding affects optimal language choice}
     
@@ -527,27 +555,6 @@ def f(x):
     isn't as comprehensive as with Python.''
 
 \end{frame}
-
-\begin{frame}
-
-    Thoughts from pro developer \brown{\texttt{Lonely-Public2655}}
-
-    \begin{itemize}
-        \item AI doesn't see the big picture.
-        \vspace{0.5em}
-        \item Can ace small tasks but struggles to connect them meaningfully.
-        \vspace{0.5em}
-        \item You still need to be the architect.
-        \vspace{0.5em}
-        \item Context is fragile: AI forgets. A lot.
-        \vspace{0.5em}
-        \item Once things get weird, AI starts guessing.
-        \vspace{0.5em}
-        \item Sometimes AI gets really weird.
-    \end{itemize}
-
-\end{frame}
-
 
 \begin{frame}
     \frametitle{AI tools for economic modeling}
