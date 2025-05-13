@@ -30,12 +30,16 @@
 \setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase] % provides unicode characters 
 
 \usepackage{tikz}
+\usetikzlibrary{matrix, shapes, arrows.meta, positioning, fit, backgrounds, calc}
+
+% \usetikzlibrary{matrix, arrows.meta, positioning, calc, backgrounds}
+
+% for tikz
 \usepackage{pgfplots}
 \usepgfplotslibrary{fillbetween}
 \pgfplotsset{compat=1.16}
-\usepackage{varwidth}
-\usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc}
 
+\usepackage{varwidth}
 \usepackage{minted}
 \usemintedstyle{friendly}
 \setminted[python]{

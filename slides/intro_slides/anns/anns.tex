@@ -20,16 +20,24 @@
     \frametitle{Topics}
 
     \begin{itemize}
-        \item Foo
+        \item History
         \vspace{0.5em}
-        \item Bar
+        \item Computational graphs
+        \vspace{0.5em}
+        \item Feedforward neural networks
+        \vspace{0.5em}
+        \item Gradient descent
+        \vspace{0.5em}
+        \item Why is DL so successful?
         \vspace{0.5em}
     \end{itemize}
 
 \end{frame}
 
 
-\begin{frame}{History}
+\begin{frame}
+
+    \emp{History}
 
     \begin{itemize}
         \item 1940s: \brown{McCulloch \& Pitts} create mathematical model of NN
@@ -59,10 +67,11 @@
     
     \begin{figure}
        \centering
-       \scalebox{0.5}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{brain.pdf}}
+       \scalebox{0.6}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{brain.pdf}}
     \end{figure}
 
-    \hspace{2em} -- source: Dartmouth undergraduate journal of science
+    \footnotesize{
+    \hspace{5em} -- source: Dartmouth undergraduate journal of science}
 
 \end{frame}
 
@@ -187,7 +196,172 @@
 
 \begin{frame}
     
-    In fact we add a bias term as well
+    Note that we are using \emp{row vectors}:  $y = x W$
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    This is natural given our notation 
+
+    \begin{itemize}
+        \item $w_{ij}$ points from $i$ to $j$
+        \vspace{0.5em}
+        \item hence $y_j = \sum_i w_{ij} x_i$
+        \vspace{0.5em}
+        \item hence $y = x W$
+    \end{itemize}
+
+        \vspace{0.5em}
+    But it also has another advantage \ldots?
+
+
+\end{frame}
+
+
+\begin{frame}
+    
+    % Required packages for the diagram
+% Add these to your preamble if not already included
+% \usepackage{tikz}
+% \usetikzlibrary{arrows.meta, positioning, calc, backgrounds}
+% \usepackage{xcolor}
+
+% Row-major vs Column-major storage diagram
+  \begin{tikzpicture}[scale=0.9, transform shape]
+    % Define styles
+    \tikzset{
+        cell/.style={
+            rectangle, 
+            minimum size=1cm, 
+            draw=black,
+            thick,
+            anchor=center
+        },
+        memory cell/.style={
+            rectangle,
+            minimum width=1cm,
+            minimum height=1cm,
+            draw=black,
+            thick,
+            anchor=center
+        },
+        arrow style/.style={-{Stealth[scale=1.5]}, thick},
+        label style/.style={font=\small\bfseries}
+    }
+    
+    % Row-major memory layout
+    \begin{scope}[shift={(0,0)}]
+        % 4 CELLS FOR 2x2 MATRIX
+        \node[memory cell] (m0) at (0*1.2,0) {$W_{11}$};
+        \node[memory cell] (m1) at (1*1.2,0) {$W_{12}$};
+        \node[memory cell] (m2) at (2*1.2,0) {$W_{21}$};
+        \node[memory cell] (m3) at (3*1.2,0) {$W_{22}$};
+        
+        % Highlight rows in row-major
+        \begin{scope}[on background layer]
+            \fill[red!10] ($(m0) + (-0.6,-0.6)$) rectangle ($(m1) + (0.6,0.6)$);
+            \fill[blue!10] ($(m2) + (-0.6,-0.6)$) rectangle ($(m3) + (0.6,0.6)$);
+        \end{scope}
+        
+        % Label to the right
+        \node[right=0.8cm of m3, font=\large\bfseries] {row-major storage};
+    \end{scope}
+    
+    % Matrix definition - POSITIONED IN THE MIDDLE and using manual positioning
+    \begin{scope}[shift={(0,-3.5)}]
+        % Create matrix W manually without the matrix library
+        \node[cell] (W11) at (0,0) {$W_{11}$};
+        \node[cell] (W12) at (1,0) {$W_{12}$};
+        \node[cell] (W21) at (0,-1) {$W_{21}$};
+        \node[cell] (W22) at (1,-1) {$W_{22}$};
+    \end{scope}
+    
+    % Column-major memory layout
+    \begin{scope}[shift={(0,-7)}]
+        % 4 CELLS FOR 2x2 MATRIX
+        \node[memory cell] (c0) at (0*1.2,0) {$W_{11}$};
+        \node[memory cell] (c1) at (1*1.2,0) {$W_{21}$};
+        \node[memory cell] (c2) at (2*1.2,0) {$W_{12}$};
+        \node[memory cell] (c3) at (3*1.2,0) {$W_{22}$};
+        
+        % Highlight columns in column-major
+        \begin{scope}[on background layer]
+            \fill[red!10] ($(c0) + (-0.6,-0.6)$) rectangle ($(c1) + (0.6,0.6)$);
+            \fill[blue!10] ($(c2) + (-0.6,-0.6)$) rectangle ($(c3) + (0.6,0.6)$);
+        \end{scope}
+        
+        % Label to the right
+        \node[right=0.8cm of c3, font=\large\bfseries] {column-major storage};
+    \end{scope}
+    
+    % Draw arrows from matrix to row-major memory layout
+    \draw[arrow style, red!60] (W11.north) to[out=90, in=270] (m0.south);
+    \draw[arrow style, red!60] (W12.north) to[out=90, in=270] (m1.south);
+    \draw[arrow style, blue!60] (W21.north) to[out=90, in=270] (m2.south);
+    \draw[arrow style, blue!60] (W22.north) to[out=90, in=270] (m3.south);
+    
+    % Draw arrows from matrix to column-major memory layout
+    \draw[arrow style, red!60, dashed] (W11.south) to[out=270, in=90] (c0.north);
+    \draw[arrow style, red!60, dashed] (W21.south) to[out=270, in=90] (c1.north);
+    \draw[arrow style, blue!60, dashed] (W12.south) to[out=270, in=90] (c2.north);
+    \draw[arrow style, blue!60, dashed] (W22.south) to[out=270, in=90] (c3.north);
+    
+  \end{tikzpicture}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+
+Computing $xW$ 
+    
+    \begin{minted}{python}
+for i in range(n):     
+    for j in range(m):
+        # Access row elements of W contiguously
+        y[j] += W[i, j] * x[i] 
+    \end{minted}
+
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+Computing $Wx$
+
+    \begin{minted}{python}
+for j in range(n):   
+    for i in range(m):
+        # Non-contiguous access of W
+        y[i] += W[i, j] * x[j]        
+    \end{minted}
+
+\end{frame}
+
+\begin{frame}{Next steps}
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    After computing $y_j = \sum_i w_{ij} x_i$ we 
+    %
+    \begin{enumerate}
+        \item add a bias term $b_j$ and
+        \item apply a nonlinear ``activation function'' $\sigma \colon \RR \to \RR$
+    \end{enumerate}
+    
+    \begin{tikzpicture}
+    % Define the node with beige fill
+    \node[circle, draw, fill=orange!40, minimum size=0.8cm] (y) {$y_j + b_j$};
+    
+    % Add text to the left of the node
+    \node[left=0.5cm of y] {applying activation function};
+    
+    % Create the self-loop
+    \draw[->] (y) to[out=45, in=-45, looseness=8] node[right] {$\sigma$} (y);
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}
+    
+    First add bias:
 
     \begin{equation*}
         y_j = \sum_i w_{ij} x_i       
@@ -195,7 +369,7 @@
         y_j = \sum_i w_{ij} x_i + b_j
     \end{equation*}
 
-    And also a nonlinear ``activation function'' $\sigma \colon \RR \to \RR$
+    Then apply activation:
     %
     \begin{equation*}
         y_j = \sum_i w_{ij} x_i + b_j
@@ -204,11 +378,10 @@
     \end{equation*}
 
     Applying $\sigma$ pointwise, we can write this in vector form as
-    %
-    \begin{itemize}
-        \item $y = \sigma(x W + b)$ or
-        \item $y = \sigma(Ax)$  where $Ax = xW + b$
-    \end{itemize}
+    
+    \begin{equation*}
+        y = \sigma(x W + b)
+    \end{equation*}
 
     
 \end{frame}
@@ -220,17 +393,28 @@
        \scalebox{0.54}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{activations.pdf}}
     \end{figure}
 
+\end{frame}
+
+
+\begin{frame}{Training}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.54}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{fit_func.pdf}}
+    \end{figure}
 
 \end{frame}
 
+
 \begin{frame}
     
-    Aim: approximate an unknown functional relationship
+    Aim: Learn to predict output $y$ from input $x$
     %
-    \begin{equation*}
-        y = f(x)
-        \qquad (x \in \RR^k, \; y \in \RR)
-    \end{equation*}
+    \begin{itemize}
+        \item $x \in \RR^k$
+        \vspace{0.5em}
+        \item $y \in \RR$  (regression problem)
+    \end{itemize}
 
     \Egs
     %
@@ -328,38 +512,28 @@
 
 \begin{frame}{Extensions}
 
-    Different loss functions, different architectures
 
     \begin{itemize}
         \item Loss functions with regularization
         \vspace{0.5em}
-        \item -- insert other loss funcs --
+        \item Cross-entropy loss (classification)
         \vspace{0.5em}
-        \item Convolutional neural networks
+        \item Convolutional neural networks (image processing)
         \vspace{0.5em}
-        \item Recurrent neural networks
+        \item Recurrent neural networks (sequential data)
         \vspace{0.5em}
-        \item Transformers, etc.
+        \item Transformers (LLMs)
+        \vspace{0.5em}
+        \item etc.
     \end{itemize}
     
 \end{frame}
 
 
 
-\begin{frame}
+\begin{frame}{A mystery}
     
-    Why is deep learning so successful for some problems?
-
-    Story 1 -- human brain, universal function approx, can break curse of dim
-
-    Story 2 -- a flexible function fitting technique that extends well to high
-        dimensions and has received massive investment from the CS community
-
-\end{frame}
-
-
-\begin{frame}{What about overfitting?}
-    
+    What about overfitting?
 
 \end{frame}
 
@@ -428,36 +602,54 @@
 
 \begin{frame}
     
-    If production-level deep learning models are so large, why don't they
-    overfit data?
+    If production-level DL models are so large, why don't they overfit?
 
-    Some solutions don't use the full complexity of the model
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+    \textbf{Answer 1} Data sets are large and complex -- need complex model
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    \textbf{Answer 2} Engineers avoid using full complexity of the model
 
     \begin{itemize}
         \item Early stopping halts training when validation performance begins to decline
+        \vspace{0.5em}
         \item Many architectures include random drop out -- randomly shut down neurons
             during training
     \end{itemize}
 
 
-    The insight behind dropout - introducing randomness can prevent overfitting -
-    has influenced other regularization techniques in deep learning, such
-    as DropConnect and Stochastic Depth
+\end{frame}
+
+\begin{frame}
+    
+    \textbf{Answer 3} Adding randomization to training prevents overfitting
+
+    \begin{itemize}
+        \item Related to benefits of random dropout (randomization)
+        \vspace{0.5em}
+        \item Related techniques in DL such as DropConnect and Stochastic Depth
+        \vspace{0.5em}
+        \item Stochastic gradient descent injects randomness
+    \end{itemize}
 
 \end{frame}
 
 \begin{frame}
     
-    Also, modern architectures have inductive biases that guide learning toward useful patterns
+    \textbf{Answer 4} Modern architectures have inductive biases that guide
+    learning toward useful patterns
 
     \begin{itemize}
         \item translation invariance in CNNs (same pattern can be
             recognized anywhere in an image)
-        \item parameter sharing in CNNs -- using the same weights across different parts
-            of the image -- enforces learning of features that are useful everywhere
+        \item localization in CNNs -- pixels are influenced more by neighbors
+            than pixels far away
         \item parameter sharing in RNNs -- similarity of transformations across
             time
-        \item Markovian assumption in RNNs 
         \item Layer normalization and residual connections in transformers -
             create a bias toward stable training dynamics and information preservation across layers.
     \end{itemize}
@@ -546,6 +738,68 @@
 \end{frame}
 
 
+
+
+\begin{frame}{Summary}
+    
+    Why can deep learning successfully generalize from limited observations?
+
+\end{frame}
+
+
+\begin{frame}{Computer scientists' story}
+
+    \begin{itemize}
+        \item Based on a model of the human brain! 
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item A universal function approximator!
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Can break the curse of dimensionality!
+    \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Alternative story (by me)}
+
+
+    \begin{itemize}
+        \item A highly flexible function fitting technique 
+        \vspace{0.5em}
+        \item Easy to understand with limited maths background
+        \vspace{0.5em}
+        \item Extends naturally to high dimensions 
+        \vspace{0.5em}
+        \item Function evaluations are highly parallelizable
+        \vspace{0.5em}
+        \item Smooth recursive structure suited to calculating gradients
+        \vspace{0.5em}
+        \item Has received \underline{massive} investment from the CS community
+            \begin{itemize}
+                \vspace{0.5em}
+                \item algorithms
+                \vspace{0.5em}
+                \item software
+                \vspace{0.5em}
+                \item hardware
+            \end{itemize}
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    
+    \begin{itemize}
+        \vspace{0.5em}
+        \item Many incremental improvements to improve regularization and training
+        \vspace{0.5em}
+        \item Many incremental improvements to inject domain-specific knowledge
+            (CNNs, transformers, etc.)
+    \end{itemize}
+
+\end{frame}
 
 \end{document}
 

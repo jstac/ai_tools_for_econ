@@ -92,12 +92,22 @@
 
 \end{frame}
 
+
 \begin{frame}
     \frametitle{LLMs}
     
     \begin{figure}
        \centering
-       \scalebox{0.24}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{llms.png}}
+       \scalebox{0.32}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{llms0.pdf}}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}
+    
+    \begin{figure}
+       \centering
+       \scalebox{0.32}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{llms.pdf}}
     \end{figure}
 
 \end{frame}
@@ -177,11 +187,11 @@
         \item U.S. = \$109 billion 
         \vspace{0.5em}
         \item China \$9.3 billion 
-        \vspace{0.5em}
-        \item UK \$4.5 billion
     \end{itemize}
 
         \vspace{0.5em}
+    Estimate for US firms in 2025: \$350 billion
+
         \vspace{0.5em}
     Massive investments in 
 
@@ -350,7 +360,7 @@ dθ = loss_gradient(θ, x_data, y_data)
 
     \begin{figure}
        \begin{center}
-        \scalebox{0.18}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{dgx.png}}
+        \scalebox{0.22}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{dgx.png}}
        \end{center}
     \end{figure}
     
@@ -364,23 +374,27 @@ dθ = loss_gradient(θ, x_data, y_data)
 
     \vspace{0.5em}
     \begin{itemize}
-        \item multithreading over GPU cores (how many?)
+        \item Multithreading over GPU cores / compute units (how many?)
     \end{itemize}
     
     \begin{minted}{python}
+def function(data):
+    # perform a calculation based on input data
+    return output
 vectorized_function = vmap(function)  
-outputs = vectorized_function(data)  
+# Perform the same action on a collection of data sets
+outputs = vectorized_function(data_sets)   
     \end{minted}
 
     \vspace{0.5em}
     \vspace{0.5em}
     \begin{itemize}
-        \item multiprocessing over accelerators in a GPU farm / cluster 
+        \item Multiprocessing over all GPUs in a farm / cluster 
     \end{itemize}
 
     \begin{minted}{python}
 parallel_function = pmap(function)  
-outputs = parallel_function(data)  
+outputs = parallel_function(data_sets)  
     \end{minted}
 
 
@@ -399,6 +413,7 @@ def f(x):
     return jnp.sin(x) - jnp.cos(x**2)
     \end{minted}
 
+    \vspace{0.5em}
     \vspace{0.5em}
     Advantages over AOT compilers:
 
@@ -476,16 +491,18 @@ def f(x):
 \end{frame}
 
 
-\begin{frame}{Affects language choice}
+\begin{frame}{AI coding affects optimal language choice}
     
     ``I'm definitely stronger with Python than MATLAB.''
 
+    \vspace{0.5em}
     \vspace{0.5em}
     ``My capabilities with Python
     are more comprehensive. I have deeper familiarity with Python's extensive
     ecosystem of libraries, frameworks, and modern development practices.''
 
 
+    \vspace{0.5em}
     \vspace{0.5em}
     ``I can
     more confidently help with advanced Python topics, debugging complex Python
@@ -498,11 +515,13 @@ def f(x):
     ``I'm definitely stronger with Python than Julia.''
 
     \vspace{0.5em}
+    \vspace{0.5em}
     ``Python is one of my most proficient languages - I have deep familiarity with
     its syntax, libraries, frameworks, and best practices across many domains
     including data science, web development, machine learning, and
     general-purpose programming.''
 
+    \vspace{0.5em}
     \vspace{0.5em}
     ``While I understand Julia's syntax and core concepts, my expertise with it
     isn't as comprehensive as with Python.''
@@ -511,20 +530,20 @@ def f(x):
 
 \begin{frame}
 
-    Thoughts from developer \texttt{Lonely-Public2655}
+    Thoughts from pro developer \brown{\texttt{Lonely-Public2655}}
 
     \begin{itemize}
-        \item AI doesn't see the big picture 
+        \item AI doesn't see the big picture.
         \vspace{0.5em}
-        \item Can ace small tasks but struggles to connect them meaningfully
+        \item Can ace small tasks but struggles to connect them meaningfully.
         \vspace{0.5em}
-        \item You still need to be the architect
+        \item You still need to be the architect.
         \vspace{0.5em}
         \item Context is fragile: AI forgets. A lot.
         \vspace{0.5em}
-        \item Once things get weird, AI starts guessing
+        \item Once things get weird, AI starts guessing.
         \vspace{0.5em}
-        \item Sometimes AI gets really weird 
+        \item Sometimes AI gets really weird.
     \end{itemize}
 
 \end{frame}

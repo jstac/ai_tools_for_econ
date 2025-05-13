@@ -1,6 +1,6 @@
-\input{../preamble}
+\input{../../preamble}
 
-\title{What's JAX}
+\title{Google JAX}
 
 
 
@@ -30,12 +30,8 @@
 
 \end{frame}
 
-
-
-    
-
 \begin{frame}
-    \frametitle{Focus on JAX}
+    \frametitle{What's JAX?}
 
     \url{https://jax.readthedocs.io/en/latest/}
     
@@ -52,30 +48,6 @@
             \vspace{0.5em}
 
 \end{frame}
-
-
-
-\begin{frame}[fragile]
-    
-    \vspace{-1em}
-    \begin{minted}{python}
-import jax.numpy as jnp
-from jax import grad, jit
-
-def f(θ, x):
-  for W, b in θ:
-    w = W @ x + b
-    x = jnp.tanh(w)  
-  return x
-
-def loss(θ, x, y):
-  return jnp.sum((y - f(θ, x))**2)
-
-grad_loss = jit(grad(loss))  # Now use gradient descent 
-    \end{minted}
-
-\end{frame}
-
 
 \begin{frame}
     
@@ -102,6 +74,351 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
     \end{itemize}
 
 \end{frame}
+
+
+
+\begin{frame}
+    \frametitle{History: Setting the stage}
+
+    \begin{itemize}
+        \item Some history of scientific computing
+        \item Dynamic and static types
+        \item Background on vectorization / JIT compilers
+    \end{itemize}
+
+\end{frame}
+    
+
+
+\begin{frame}
+    \frametitle{Fortran / C  --- static types and AOT compilers}
+
+
+    \Eg Suppose we want to compute the sequence
+    %
+    \begin{equation*}
+        k_{t+1} = s k_t^\alpha + (1 - \delta) k_t
+    \end{equation*}
+    %
+    from some given $k_0$ 
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+    Let's write a function in C that 
+    %
+    \begin{enumerate}
+        \item implements the loop 
+        \vspace{0.5em}
+        \item returns the last $k_t$
+    \end{enumerate}
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+    
+    \begin{minted}{c}
+#include <stdio.h>
+#include <math.h>
+
+int main() {
+    double k = 0.2;
+    double alpha = 0.4;
+    double s = 0.3;
+    double delta = 0.1;
+    int i;
+    int n = 1000;
+    for (i = 0; i < n; i++) {
+        k = s * pow(k, alpha) + (1 - delta) * k;
+    }
+    printf("k = %f\n", k);
+}
+    \end{minted}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+    
+    \begin{minted}{zsh}
+❯❯ gcc solow.c -o out -lm
+❯❯ ./out 
+
+x = 6.240251
+    \end{minted}
+
+\end{frame}
+
+\begin{frame}
+
+    Pros
+
+    \begin{itemize}
+        \item fast 
+    \end{itemize}
+
+
+    \vspace{0.5em}
+
+    Cons
+
+    \begin{itemize}
+        \item time consuming to write
+        \item lack of portability
+        \item hard to debug
+        \item hard to parallelize
+        \item low interactivity
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+
+    For comparison, the same operation in Python:
+    
+    \begin{minted}{python}
+
+α = 0.4
+s = 0.3
+δ = 0.1
+n = 1_000
+k = 0.2
+
+for i in range(n-1):
+    k = s * k**α + (1 - δ) * k
+
+print(k)
+
+    \end{minted}
+
+\end{frame}
+
+\begin{frame}
+
+    Pros
+
+    \begin{itemize}
+        \item easy to write
+        \item high portability
+        \item easy to debug
+        \item high interactivity
+    \end{itemize}
+
+    \vspace{0.5em}
+
+    Cons
+
+    \begin{itemize}
+        \item slow
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    So how can we get 
+
+    \begin{center}
+    good execution speeds \navy{and} high productivity / interactivity?
+    \end{center}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+    \frametitle{MATLAB}
+
+    \begin{minted}{matlab}
+        A = [2.0, -1.0
+             5.0, -0.5];
+
+        b = [0.5, 1.0]';
+
+        x = inv(A) * b
+    \end{minted}
+
+
+\end{frame}
+
+
+
+\begin{frame}
+    
+    \begin{figure}
+       \begin{center} % l b r t
+        \scalebox{.6}{\includegraphics[trim={2cm 8cm 6cm 3cm},clip]{matlab.pdf}}
+       \end{center}
+    \end{figure}
+
+    
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Python + NumPy}
+
+
+    \begin{minted}{python}
+        import numpy 
+
+        A = ((2.0, -1.0),
+             (5.0, -0.5))
+
+        b = (0.5, 1.0)
+
+        A, b = np.array(A), np.array(b)
+
+        x = np.inv(A) @ b
+    \end{minted}
+
+\end{frame}
+
+\begin{frame}
+
+    \begin{figure}
+       \begin{center} % l b r t
+        \scalebox{.6}{\includegraphics[trim={2cm 8cm 6cm 3cm},clip]{numpy.pdf}}
+       \end{center}
+    \end{figure}
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Julia --- rise of the JIT compilers}
+
+    Can do MATLAB / NumPy style vectorized operations
+
+    \begin{minted}{julia}
+A = [2.0  -1.0
+     5.0  -0.5]
+
+b = [0.5  1.0]'
+
+x = inv(A) * b
+    \end{minted}
+    
+\end{frame}
+
+
+\begin{frame}
+    
+    But also has fast loops via an efficient JIT compiler
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \Eg Suppose, again, that we want to compute 
+    %
+    \begin{equation*}
+        k_{t+1} = s k_t^\alpha + (1 - \delta) k_t
+    \end{equation*}
+    %
+    from some given $k_0$ 
+
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Iterative, not easily vectorized
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    
+    \begin{minted}{julia}
+
+function solow(k0, α=0.4, δ=0.1, n=1_000)
+    k = k0
+    for i in 1:(n-1)
+        k = s * k^α + (1 - δ) * k
+    end
+    return k
+end
+
+solow(0.2)
+    \end{minted}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+
+    Julia accelerates \texttt{solow} at runtime via a JIT compiler
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Python + Numba --- same architecture, same speed}
+    
+    \begin{minted}{python}
+from numba import jit
+
+@jit(nopython=True)
+def solow(k0, α=0.4, δ=0.1, n=1_000):
+    k = k0
+    for i in range(n-1):
+        k = s * k**α + (1 - δ) * k
+    return k
+
+solow(0.2)
+    \end{minted}
+
+
+    Runs at same speed as Julia / C / Fortran
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Back to JAX}
+
+            \vspace{0.5em}
+    \begin{itemize}
+        \item \brown{J}ust-in-time compilation
+            \vspace{0.5em}
+        \item \brown{A}utomatic differentiation
+            \vspace{0.5em}
+        \item \brown{X}ccelerated linear algebra
+    \end{itemize}
+
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+    \frametitle{Automatic differentiation}
+    
+    \vspace{-1em}
+    \begin{minted}{python}
+import jax.numpy as jnp
+from jax import grad, jit
+
+def f(θ, x):
+  for W, b in θ:
+    w = W @ x + b
+    x = jnp.tanh(w)  
+  return x
+
+def loss(θ, x, y):
+  return jnp.sum((y - f(θ, x))**2)
+
+grad_loss = jit(grad(loss))  # Now use gradient descent 
+    \end{minted}
+
+\end{frame}
+
 
 
 \begin{frame}
@@ -262,7 +579,7 @@ updated_params = sgd_update(params, grads, 0.01)
 
 \begin{frame}
 
-    Advantages of JAX (vs PyTorch / Numba / etc.) for economists:
+    Advantages of JAX (vs PyTorch / Tensorflow / etc.) for economists:
     %
     \begin{itemize}
         \item exposes low level functions
