@@ -33,25 +33,44 @@
 \begin{frame}
     \frametitle{What's JAX?}
 
-    \url{https://jax.readthedocs.io/en/latest/}
+    \begin{figure}
+       \centering
+       \scalebox{0.4}{\includegraphics{logo.pdf}}
+    \end{figure}
     
             \vspace{0.5em}
-    \begin{itemize}
-        \item \brown{J}ust-in-time compilation
-            \vspace{0.5em}
-        \item \brown{A}utomatic differentiation
-            \vspace{0.5em}
-        \item \brown{X}ccelerated linear algebra
-    \end{itemize}
 
-            \vspace{0.5em}
-            \vspace{0.5em}
+    \begin{center}
+        \url{https://jax.readthedocs.io/en/latest/}
+    \end{center}
+
+    
 
 \end{frame}
 
 \begin{frame}
     
-    \Eg AlphaFold3 (Google JAX)
+    A high-performance numerical computing library 
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+    \begin{itemize}
+        \item Developed by Google Research
+            \vspace{0.5em}
+        \item Easy-to-use NumPy-style API for array operations
+            \vspace{0.5em}
+        \item Simple GPU/TPU acceleration 
+            \vspace{0.5em}
+        \item Automatic differentiation
+            \vspace{0.5em}
+        \item Rising popularity among ML researchers
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    
+    \Eg AlphaFold3 (built on Google JAX)
 
         \vspace{0.5em}
     \textbf{Highly accurate protein structure prediction with AlphaFold}
@@ -80,9 +99,18 @@
 \begin{frame}
     \frametitle{History: Setting the stage}
 
+    Before we can understand JAX, we need to know a bit about scientific
+    computing
+
+    \vspace{0.5em}
+    Let's recall some of the major paradigms and ideas:
+
+    \vspace{0.5em}
     \begin{itemize}
         \item Some history of scientific computing
+    \vspace{0.5em}
         \item Dynamic and static types
+    \vspace{0.5em}
         \item Background on vectorization / JIT compilers
     \end{itemize}
 
@@ -142,11 +170,25 @@ int main() {
 
 
 \begin{frame}[fragile]
+
+
+    First we compile the whole program (ahead-of-time compilation):
     
+    \vspace{0.5em}
     \begin{minted}{zsh}
 ❯❯ gcc solow.c -o out -lm
-❯❯ ./out 
+    \end{minted}
 
+
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    Now we execute:
+
+    \vspace{0.5em}
+    \begin{minted}{zsh}
+❯❯ ./out 
 x = 6.240251
     \end{minted}
 
@@ -157,7 +199,8 @@ x = 6.240251
     Pros
 
     \begin{itemize}
-        \item fast 
+        \item fast arithmetic
+        \item fast loops
     \end{itemize}
 
 
@@ -166,7 +209,7 @@ x = 6.240251
     Cons
 
     \begin{itemize}
-        \item time consuming to write
+        \item slow to write
         \item lack of portability
         \item hard to debug
         \item hard to parallelize
@@ -229,40 +272,22 @@ print(k)
 
 \end{frame}
 
-
-
-\begin{frame}[fragile]
-    \frametitle{MATLAB}
-
-    \begin{minted}{matlab}
-        A = [2.0, -1.0
-             5.0, -0.5];
-
-        b = [0.5, 1.0]';
-
-        x = inv(A) * b
-    \end{minted}
-
-
-\end{frame}
-
-
-
 \begin{frame}
-    
+    \frametitle{Python + NumPy}
+
     \begin{figure}
        \begin{center} % l b r t
-        \scalebox{.6}{\includegraphics[trim={2cm 8cm 6cm 3cm},clip]{matlab.pdf}}
+        \scalebox{.6}{\includegraphics[trim={2cm 8cm 6cm 3cm},clip]{numpy.pdf}}
        \end{center}
     \end{figure}
 
-    
+    \begin{itemize}
+        \item Key is converting problems to array-processing operations
+    \end{itemize}
+
 \end{frame}
 
-
 \begin{frame}[fragile]
-    \frametitle{Python + NumPy}
-
 
     \begin{minted}{python}
         import numpy 
@@ -279,16 +304,49 @@ print(k)
 
 \end{frame}
 
-\begin{frame}
 
+
+\begin{frame}
+    \frametitle{MATLAB}
+
+    NumPy is similar to and borrows from the older MATLAB programming
+    environment
+
+    \vspace{0.5em}
+    \vspace{0.5em}
     \begin{figure}
        \begin{center} % l b r t
-        \scalebox{.6}{\includegraphics[trim={2cm 8cm 6cm 3cm},clip]{numpy.pdf}}
+        \scalebox{.6}{\includegraphics[trim={2cm 8cm 6cm 3cm},clip]{matlab.pdf}}
        \end{center}
     \end{figure}
 
 
 \end{frame}
+
+
+
+\begin{frame}[fragile]
+
+    Here
+    %
+    \begin{enumerate}
+        \item arrays are built in a high-level interface
+        \item execution takes place in an efficient low-level environment
+        \item results are returned to the high-level interface
+    \end{enumerate}
+    
+    \begin{minted}{matlab}
+        A = [2.0, -1.0
+             5.0, -0.5];
+
+        b = [0.5, 1.0]';
+
+        x = inv(A) * b
+    \end{minted}
+
+    
+\end{frame}
+
 
 
 \begin{frame}[fragile]
@@ -392,10 +450,45 @@ solow(0.2)
         \item \brown{X}ccelerated linear algebra
     \end{itemize}
 
+            \vspace{0.5em}
+            \vspace{0.5em}
+    JAX has significant advantages over C / Fortran / NumPy / Julia / Numba /
+    etc.
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+    \pause
+    \begin{itemize}
+        \item But JAX is not uniformly ``better'' --- discuss later
+    \end{itemize}
+
 
 \end{frame}
 
 
+\begin{frame}[fragile]
+    \frametitle{Just-in-time compilation}
+    
+    \begin{minted}{python}
+@jax.jit
+def f(x):
+    """
+    A function that transforms an array x.
+    """
+    term1 = 2 * jnp.sin(3 * x) * jnp.cos(x/2)
+    term2 = 0.5 * x**2 * jnp.cos(5*x) / (1 + 0.1 * x**2)
+    term3 = 3 * jnp.exp(-0.2 * (x - 4)**2) * jnp.sin(10*x)
+    term4 = 0.8 * jnp.log(jnp.abs(x) + 1) * jnp.cos(x**2 / 8)
+    return term1 + term2 + term3 + term4 
+    \end{minted}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+    \begin{itemize}
+        \item Compiles at runtime based on specified shape \& data type
+    \end{itemize}
+
+\end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Automatic differentiation}
@@ -407,7 +500,7 @@ from jax import grad, jit
 
 def f(θ, x):
   for W, b in θ:
-    w = W @ x + b
+    w = x @ W + b
     x = jnp.tanh(w)  
   return x
 
@@ -420,6 +513,67 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
 \end{frame}
 
 
+\begin{frame}[fragile]
+    \frametitle{Xccelerated linear algebra}
+
+    Array operations are
+    %
+    \begin{itemize}
+        \item JIT-compiled
+    \vspace{0.5em}
+        \item automatically parallelized
+    \vspace{0.5em}
+        \item automatically optimized for and deployed to available hardware
+    \end{itemize}
+    
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Advantages over NumPy / MATLAB
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Can specialize machine code to data types \textbf{and} shapes!
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Automatically matches tasks with accelerators (GPU / TPU)
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Fuses array operations for speed and memory efficiency
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    Advantages of JAX (vs PyTorch / Tensorflow / etc.) for economists:
+    %
+    \begin{itemize}
+        \item exposes low level functions
+            \vspace{0.5em}
+        \item elegant functional programming style -- close to maths
+            \vspace{0.5em}
+        \item elegant autodiff tools
+            \vspace{0.5em}
+        \item array operations follow standard NumPy API
+            \vspace{0.5em}
+        \item automatic parallelization
+            \vspace{0.5em}
+        \item same code, multiple backends (CPUs, GPUs, TPUs)
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Features of JAX}
+
+    Let's look at some useful features
+    
+\end{frame}
 
 \begin{frame}
     \frametitle{Functional Programming}
@@ -562,39 +716,5 @@ updated_params = sgd_update(params, grads, 0.01)
 \end{frame}
 
 
-\begin{frame}
-    
-    Advantages over NumPy / MATLAB
-
-    \vspace{0.5em}
-    \begin{itemize}
-        \item can specialize machine code based on parameter types / shapes
-        \vspace{0.5em}
-        \item automatically matches tasks with accelerators (GPU / TPU)
-        \vspace{0.5em}
-        \item fuses array operations for speed and memory efficiency
-    \end{itemize}
-
-\end{frame}
-
-\begin{frame}
-
-    Advantages of JAX (vs PyTorch / Tensorflow / etc.) for economists:
-    %
-    \begin{itemize}
-        \item exposes low level functions
-            \vspace{0.5em}
-        \item elegant functional programming style -- close to maths
-            \vspace{0.5em}
-        \item elegant autodiff tools
-            \vspace{0.5em}
-        \item array operations follow standard NumPy API
-            \vspace{0.5em}
-        \item automatic parallelization
-            \vspace{0.5em}
-        \item same code, multiple backends (CPUs, GPUs, TPUs)
-    \end{itemize}
-
-\end{frame}
 
 \end{document}
