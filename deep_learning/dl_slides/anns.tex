@@ -85,6 +85,8 @@
 
 \end{frame}
 
+
+     
 \begin{frame}
     
     \begin{tikzpicture}[
@@ -454,16 +456,15 @@ for j in range(n):
     %
     \begin{equation*}
         f_\theta
-        = \sigma \circ A_{m} 
-            \circ \cdots \circ \sigma \circ A_{2}  \circ \sigma \circ A_{1}
+        = G_{m} \circ G_{m-1} \circ \cdots \circ G_{2}  \circ G_{1}
     \end{equation*}
     %
     where
     %
     \begin{itemize}
-        \item $A_{\ell} x = x W_\ell + b_\ell $ is an affine map 
+        \item $G_{\ell} x = \sigma_\ell(x W_\ell + b_\ell)$ 
         \vspace{0.5em}
-        \item $\sigma$ is a nonlinear ``activation'' function
+        \item $\sigma_\ell$ is an activation function
     \end{itemize}
 
 \end{frame}
@@ -615,10 +616,9 @@ for j in range(n):
     \textbf{Answer 2} Engineers avoid using full complexity of the model
 
     \begin{itemize}
-        \item Early stopping halts training when validation performance begins to decline
+        \item Early stopping halts training when test loss starts to rise
         \vspace{0.5em}
-        \item Many architectures include random drop out -- randomly shut down neurons
-            during training
+        \item Drop out -- shut down some neurons during training
     \end{itemize}
 
 
@@ -636,7 +636,19 @@ for j in range(n):
         \item Stochastic gradient descent injects randomness
     \end{itemize}
 
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+    Randomness ``adds some smoothing'' to a given data set
+
+    ``The model must learn to be robust to these perturbations, which encourages
+    it to find smoother, more generalizable decision boundaries rather than
+    fitting to noise in the training data.'' 
+
+
+
 \end{frame}
+
 
 \begin{frame}
     
@@ -726,11 +738,6 @@ for j in range(n):
     \node[color=blue, font=\small\bfseries] at (12,0.1) {training loss};
     \node[color=red, font=\small\bfseries] at (12,0.4) {test loss};
 
-    % Label the critical regions
-    \node[align=center, font=\small] at (4, 0.1) {classical\\sweet spot};
-
-    % Arrow pointing to the classic minimum
-    \draw[-stealth, black, line width=0.8pt] (4,0.2) -- (4,0.38);
 
     \end{axis}
     \end{tikzpicture}
@@ -750,7 +757,7 @@ for j in range(n):
 \begin{frame}{Computer scientists' story}
 
     \begin{itemize}
-        \item Based on a model of the human brain! 
+        \item Good because based on a model of the human brain! 
         \vspace{0.5em}
         \vspace{0.5em}
         \item A universal function approximator!
@@ -762,7 +769,7 @@ for j in range(n):
 
 \end{frame}
 
-\begin{frame}{Alternative story (by me)}
+\begin{frame}{Alternative story (me)}
 
 
     \begin{itemize}
@@ -772,6 +779,8 @@ for j in range(n):
         \vspace{0.5em}
         \item Extends naturally to high dimensions 
         \vspace{0.5em}
+        \item Can exploit low-dimensional structure
+        \vspace{0.5em}
         \item Function evaluations are highly parallelizable
         \vspace{0.5em}
         \item Smooth recursive structure suited to calculating gradients
@@ -779,11 +788,7 @@ for j in range(n):
         \item Has received \underline{massive} investment from the CS community
             \begin{itemize}
                 \vspace{0.5em}
-                \item algorithms
-                \vspace{0.5em}
-                \item software
-                \vspace{0.5em}
-                \item hardware
+                \item algos, software, hardware
             \end{itemize}
     \end{itemize}
 

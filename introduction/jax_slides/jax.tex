@@ -3,7 +3,6 @@
 \title{Google JAX}
 
 
-
 \author{John Stachurski}
 
 
@@ -17,89 +16,56 @@
 \end{frame}
 
 
+\begin{frame}{Code}
+
+    In this lecture series we will code in Python
+
+    \pause
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    Favorite libraries
+
+    \begin{itemize}
+        \item \brown{Google JAX}
+        \vspace{0.2em}
+        \item \brown{Google JAX}
+        \vspace{0.2em}
+        \item \brown{Google JAX}
+        \vspace{0.2em}
+        \item \brown{Google JAX}
+        \vspace{0.2em}
+        \item \brown{Google JAX}
+        \vspace{0.2em}
+        \item \brown{Google JAX}\ldots
+        \vspace{0.2em}
+    \end{itemize}
+
+\end{frame}
+
 
 \begin{frame}
     \frametitle{Topics}
 
     \begin{itemize}
-        \item Foo
+        \item History and background
         \vspace{0.5em}
-        \item Bar
+        \item JIT compilation
         \vspace{0.5em}
+        \item Autodiff
+        \vspace{0.5em}
+        \item Array operations
+        \vspace{0.5em}
+        \item Functional programming
     \end{itemize}
 
 \end{frame}
-
-\begin{frame}
-    \frametitle{What's JAX?}
-
-    \begin{figure}
-       \centering
-       \scalebox{0.4}{\includegraphics{logo.pdf}}
-    \end{figure}
-    
-            \vspace{0.5em}
-
-    \begin{center}
-        \url{https://jax.readthedocs.io/en/latest/}
-    \end{center}
-
-    
-
-\end{frame}
-
-\begin{frame}
-    
-    A high-performance numerical computing library 
-
-            \vspace{0.5em}
-            \vspace{0.5em}
-    \begin{itemize}
-        \item Developed by Google Research
-            \vspace{0.5em}
-        \item Easy-to-use NumPy-style API for array operations
-            \vspace{0.5em}
-        \item Simple GPU/TPU acceleration 
-            \vspace{0.5em}
-        \item Automatic differentiation
-            \vspace{0.5em}
-        \item Rising popularity among ML researchers
-    \end{itemize}
-
-\end{frame}
-
-\begin{frame}
-    
-    \Eg AlphaFold3 (built on Google JAX)
-
-        \vspace{0.5em}
-    \textbf{Highly accurate protein structure prediction with AlphaFold}
-
-        \vspace{0.5em}
-    John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov,
-    Olaf Ronneberger, Kathryn Tunyasuvunakool,\ldots 
-
-        \vspace{0.5em}
-    \underline{Nature} Vol.\ 596 (2021)
-
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \begin{itemize}
-        \item Citation count $= ~30$K
-        \vspace{0.5em}
-        \item Nobel Prize in Chemistry 2024
-    \end{itemize}
-
-\end{frame}
-
 
 
 \begin{frame}
     \frametitle{History: Setting the stage}
 
-    Before we can understand JAX, we need to know a bit about scientific
+    Before we can understand JAX, we need to know a bit about the history of scientific
     computing
 
     \vspace{0.5em}
@@ -145,11 +111,10 @@
 
 \end{frame}
 
+
 \begin{frame}[fragile]
     
     \begin{minted}{c}
-#include <stdio.h>
-#include <math.h>
 
 int main() {
     double k = 0.2;
@@ -281,10 +246,6 @@ print(k)
        \end{center}
     \end{figure}
 
-    \begin{itemize}
-        \item Key is converting problems to array-processing operations
-    \end{itemize}
-
 \end{frame}
 
 \begin{frame}[fragile]
@@ -304,6 +265,17 @@ print(k)
 
 \end{frame}
 
+\begin{frame}
+    
+    \begin{enumerate}
+        \item Arrays are defined in a high-level interface
+        \vspace{0.5em}
+        \item Execution takes place in an efficient low-level environment
+        \vspace{0.5em}
+        \item Results are returned to the high-level interface
+    \end{enumerate}
+
+\end{frame}
 
 
 \begin{frame}
@@ -324,16 +296,7 @@ print(k)
 \end{frame}
 
 
-
 \begin{frame}[fragile]
-
-    Here
-    %
-    \begin{enumerate}
-        \item arrays are built in a high-level interface
-        \item execution takes place in an efficient low-level environment
-        \item results are returned to the high-level interface
-    \end{enumerate}
     
     \begin{minted}{matlab}
         A = [2.0, -1.0
@@ -343,9 +306,41 @@ print(k)
 
         x = inv(A) * b
     \end{minted}
-
     
 \end{frame}
+
+
+
+    
+
+\begin{frame}
+    
+    Advantages of NumPy / MATLAB
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Operations are passed to specialized to machine code 
+        \vspace{0.5em}
+        \item Type-checking is paid per array, not per array element
+    \end{itemize}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    Disadvantages 
+
+    \begin{itemize}
+        \item Can be highly memory intensive (intermediate arrays)
+        \vspace{0.5em}
+        \item Fails to specialize on array \emp{shapes}
+        \vspace{0.5em}
+        \item What if we can't convert problems to array-processing operations?
+    \end{itemize}
+
+\end{frame}
+
+
+
+
 
 
 
@@ -438,32 +433,140 @@ solow(0.2)
 \end{frame}
 
 
+
+
 \begin{frame}
-    \frametitle{Back to JAX}
+    \frametitle{What's JAX?}
+
+    \begin{figure}
+       \centering
+       \scalebox{0.4}{\includegraphics{logo.pdf}}
+    \end{figure}
+    
+            \vspace{0.5em}
+
+    \begin{center}
+        \url{https://jax.readthedocs.io/en/latest/}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}
+    
+    A high-performance numerical computing library 
 
             \vspace{0.5em}
+            \vspace{0.5em}
+
     \begin{itemize}
-        \item \brown{J}ust-in-time compilation
+        \item Developed by \href{https://research.google/}{Google Research}
+            (prev.\ Google Brain)
             \vspace{0.5em}
-        \item \brown{A}utomatic differentiation
+        \item Easy-to-use NumPy-style API for array operations
             \vspace{0.5em}
-        \item \brown{X}ccelerated linear algebra
+        \item Simple GPU/TPU acceleration 
+            \vspace{0.5em}
+        \item Automatic differentiation
+            \vspace{0.5em}
+        \item Math-centric library semantics
+            \vspace{0.5em}
+        \item Rising popularity among ML researchers
     \end{itemize}
 
             \vspace{0.5em}
             \vspace{0.5em}
-    JAX has significant advantages over C / Fortran / NumPy / Julia / Numba /
-    etc.
+
+    ``The JAX compiler aims to enable researchers to write Python programs\ldots
+        that are automatically compiled and scaled to leverage accelerators and
+        supercomputers''
+
+\end{frame}
+
+\begin{frame}
+    
+    \Eg AlphaFold3 is built with Google JAX
+
+        \vspace{0.5em}
+
+    \begin{figure}
+       \begin{center} % l b r t
+        \scalebox{.24}{\includegraphics{af.pdf}}
+       \end{center}
+    \end{figure}
+
+
+\end{frame}
+
+\begin{frame}
+    
+    \textbf{Highly accurate protein structure prediction with AlphaFold}
+
+        \vspace{0.5em}
+    John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov,
+    Olaf Ronneberger, Kathryn Tunyasuvunakool,\ldots 
+
+        \vspace{0.5em}
+    \underline{Nature} Vol.\ 596 (2021)
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Citation count $= ~30$K
+        \vspace{0.5em}
+        \item Nobel Prize in Chemistry 2024
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+
+    ``The acronym JAX stands for \brown{Just After eXecution}, since to com-
+    pile a function we first monitor its execution once in Python.''
+
+            \vspace{0.5em}
+
+    \begin{itemize}
+        \item Just-in-time compilation
+            \vspace{0.5em}
+        \item Automatic differentiation
+            \vspace{0.5em}
+        \item Accelerated linear algebra
+    \end{itemize}
 
             \vspace{0.5em}
             \vspace{0.5em}
+
+            \vspace{0.5em}
     \pause
     \begin{itemize}
-        \item But JAX is not uniformly ``better'' --- discuss later
+        \item significant advantages over C / Fortran / NumPy / Julia / Numba 
+        \item But is not uniformly ``better'' --- discuss later
     \end{itemize}
 
 
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Familiar NumPy-style array API}
+
+    \begin{minted}{python}
+        import jax.numpy as jnp
+
+        A = ((2.0, -1.0),
+             (5.0, -0.5))
+
+        b = (0.5, 1.0)
+
+        A, b = jnp.array(A), jnp.array(b)
+
+        x = jnp.inv(A) @ b
+    \end{minted}
+
+\end{frame}
+
 
 
 \begin{frame}[fragile]
@@ -478,8 +581,7 @@ def f(x):
     term1 = 2 * jnp.sin(3 * x) * jnp.cos(x/2)
     term2 = 0.5 * x**2 * jnp.cos(5*x) / (1 + 0.1 * x**2)
     term3 = 3 * jnp.exp(-0.2 * (x - 4)**2) * jnp.sin(10*x)
-    term4 = 0.8 * jnp.log(jnp.abs(x) + 1) * jnp.cos(x**2 / 8)
-    return term1 + term2 + term3 + term4 
+    return term1 + term2 + term3 
     \end{minted}
 
             \vspace{0.5em}
@@ -489,6 +591,7 @@ def f(x):
     \end{itemize}
 
 \end{frame}
+
 
 \begin{frame}[fragile]
     \frametitle{Automatic differentiation}
@@ -514,7 +617,7 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
 
 
 \begin{frame}[fragile]
-    \frametitle{Xccelerated linear algebra}
+    \frametitle{Accelerated linear algebra (XLA)}
 
     Array operations are
     %
@@ -539,9 +642,7 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
         \item Can specialize machine code to data types \textbf{and} shapes!
         \vspace{0.5em}
         \vspace{0.5em}
-        \vspace{0.5em}
         \item Automatically matches tasks with accelerators (GPU / TPU)
-        \vspace{0.5em}
         \vspace{0.5em}
         \vspace{0.5em}
         \item Fuses array operations for speed and memory efficiency
@@ -632,8 +733,11 @@ def add_tax_non_pure(price, tax_rate=0.1):
 
     \begin{itemize}
         \item Helps testing: each function can operate in isolation
+    \vspace{0.5em}
         \item Data dependencies are explicit, which helps with understanding and optimizing complex computations 
+    \vspace{0.5em}
         \item Promotes deterministic behavior and hence reproducibility
+    \vspace{0.5em}
         \item Prevents subtle bugs that arise from mutating shared state
     \end{itemize}
 
@@ -646,17 +750,12 @@ def add_tax_non_pure(price, tax_rate=0.1):
     Advantages for JAX:
 
      \begin{itemize}
-         \item Functional programming facilitates autodiff because
-             pure functions are more straightforward to differentiate (don't mod
-             external state
-         \item Pure functions are easier to
-             parallelize and optimize for hardware accelerators like GPUs (don't
-             depend on shared mutable state, more independence)
-         \item Transformations can be composed cleanly with multiple
-             transformations yielding predictable results
-        \item Portability across hardware: The functional approach helps JAX
-            create code that can run efficiently across different hardware
-            accelerators without requiring hardware-specific implementations.
+         \item Pure functions are easier to differentiate (don't modify external state)
+    \vspace{0.5em}
+         \item Pure functions are easier to parallelize and optimize (don't
+             depend on shared mutable state)
+    \vspace{0.5em}
+         \item Transformations can be composed cleanly (predictable results)
      \end{itemize}
 
 
@@ -671,6 +770,7 @@ def add_tax_non_pure(price, tax_rate=0.1):
 
     \begin{itemize}
         \item A dictionary of lists of parameters
+        \vspace{0.5em}
         \item A list of dictionaries of parameters, etc.
     \end{itemize}
 
@@ -678,7 +778,9 @@ def add_tax_non_pure(price, tax_rate=0.1):
 
     \begin{itemize}
         \item apply functions to all leaves in a PyTree structure
+        \vspace{0.5em}
         \item differentiate functions with respect to the leaves of PyTrees
+        \vspace{0.5em}
         \item etc.
     \end{itemize}
 
