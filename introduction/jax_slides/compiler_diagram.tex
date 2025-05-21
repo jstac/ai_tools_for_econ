@@ -14,14 +14,15 @@
     % Left Path: Simple Operations
     \node (python_simple) [block, fill=pythonorange!20] {\quad x + y};
     \node (jax_dispatch_simple) [process, below=of python_simple] {JAX dispatch};
-    \node (xla_kernel_add) [kernel, below=of jax_dispatch_simple] {Precompiled XLA kernel (Add)};
+    \node (xla_kernel_add) [kernel, below=of jax_dispatch_simple] {XLA JIT compiler \\ (implicit JIT)};
     % Removed xla_kernel_mul and xla_kernel_sub nodes
 
     % Right Path: JIT-Compiled Operations
     \node (python_jit) [block, fill=pythonorange!20, right=4cm of python_simple]
     {\quad @jax.jit \\ \quad def func(x, y): \\ \quad \quad return x + 2 * y};
     \node (jax_tracing) [process, fill=tracingyellow!20, below=of python_jit] {JAX tracing};
-    \node (xla_compiler) [compiler, below=of jax_tracing] {XLA JIT Compiler};
+    \node (xla_compiler) [compiler, below=of jax_tracing] {XLA JIT Compiler \\
+    (``master builder'' JIT)};
     \node (fused_kernel) [kernel, fill=xlagreen!40, below=of xla_compiler] {Fused XLA kernel};
 
     % Device Execution (Common End Point)

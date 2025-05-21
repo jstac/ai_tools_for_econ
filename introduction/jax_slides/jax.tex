@@ -632,24 +632,35 @@ solow(0.2)
 
 
 \begin{frame}[fragile]
-    \frametitle{Accelerated linear algebra (XLA)}
+    \frametitle{Implicit JIT via the XLA pipeline}
 
-    Array operations are
+    The sequence of actions for performing \texttt{jnp.inv(A)} are as follows:
+
     %
-    \begin{itemize}
-        \item sent to precompiled XLA device code that takes array shapes as a
-            parameter
+    \begin{enumerate}
+        \item JAX identifies that it needs to invert a matrix \texttt{A} of
+            specific data type and shape
         \vspace{0.5em}
-        \item automatically parallelized 
+        \item JAX passes this information to XLA in an intermediate
+            representation
         \vspace{0.5em}
-        \item automatically optimized for and deployed to available hardware
-    \end{itemize}
+        \item XLA \brown{generates compiled code specialized to your hardware, the 
+            data type and shape of the array}
+        \vspace{0.5em}
+        \item The code is executed on the device and the result is returned to
+            the user
+        \vspace{0.5em}
+        \item The code is cached in memory for future use (when called again
+            with the same specific dtype and shape)
+    \end{enumerate}
 
 \end{frame}
 
 
 \begin{frame}[fragile]
     \frametitle{Explicit just-in-time compilation}
+
+    We can also explicitly JIT compile JAX functions
     
     \begin{minted}{python}
 @jax.jit
@@ -671,22 +682,10 @@ def f(x):
 \end{frame}
 
 
-\begin{frame}
-
-    Precompiled vs compiled in JAX:
-
-    \begin{figure}[h!]
-        \centering
-        \scalebox{0.45}{\input{compiler_diagram.tex}}
-    \end{figure}
-    
-\end{frame}
-
-
 
 \begin{frame}
     
-    JIT compiler tools for optimization
+    Compiler tools for optimizing function operations:
 
     \begin{itemize}
         \item Operations combined into fused kernels for GPU/TPU
@@ -700,11 +699,19 @@ def f(x):
         \item Memory layout optimization for multi-dimensional arrays
     \end{itemize}
 
-        \vspace{0.5em}
-        \vspace{0.5em}
-    ``JAX's JIT compiler acts like a master engineer''
-
 \end{frame}
+
+\begin{frame}
+
+    Implicit and explicit JIT 
+
+    \begin{figure}[h!]
+        \centering
+        \scalebox{0.45}{\input{compiler_diagram.tex}}
+    \end{figure}
+    
+\end{frame}
+
 
 
 
@@ -732,7 +739,7 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
 
 
 
-\begin{frame}{Features of JAX}
+\begin{frame}{More features of JAX}
 
     Let's review some other features
 
@@ -820,11 +827,9 @@ def add_tax_pure(prices, tax_rate):
 
     \begin{itemize}
         \item Helps testing: each function can operate in isolation
-    \vspace{0.5em}
-        \item Data dependencies are explicit, which helps with understanding and optimizing complex computations 
-    \vspace{0.5em}
+        \vspace{0.5em}
         \item Promotes deterministic behavior and hence reproducibility
-    \vspace{0.5em}
+        \vspace{0.5em}
         \item Prevents bugs that arise from mutating shared state
     \end{itemize}
 
@@ -837,6 +842,8 @@ def add_tax_pure(prices, tax_rate):
     Advantages for JAX:
 
      \begin{itemize}
+        \item Data dependencies are explicit, which helps with understanding and optimizing complex computations 
+        \vspace{0.5em}
          \item Pure functions are easier to differentiate 
         \vspace{0.5em}
          \item Pure functions are easier to parallelize and optimize (don't
@@ -990,7 +997,7 @@ updated_params = sgd_update(params, grads, 0.01)
 
     \vspace{0.5em}
     \begin{itemize}
-        \item Can specialize machine code to data types \textbf{and} shapes!
+        \item Machine code specialized to data types, shapes and devices!
         \vspace{0.5em}
         \vspace{0.5em}
         \item Automatically matches tasks with accelerators
@@ -1000,6 +1007,9 @@ updated_params = sgd_update(params, grads, 0.01)
         \vspace{0.5em}
         \vspace{0.5em}
         \item Can fuse array operations for speed and memory efficiency
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Elegant functional style
         \vspace{0.5em}
         \vspace{0.5em}
         \item Integrated efficient autodiff
