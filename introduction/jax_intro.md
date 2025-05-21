@@ -4,10 +4,10 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.7
+    jupytext_version: 1.16.2
 kernelspec:
-  display_name: Python
-  language: python3
+  display_name: Python 3 (ipykernel)
+  language: python
   name: python3
 ---
 
@@ -27,7 +27,7 @@ This lecture provides a short introduction to [Google JAX](https://github.com/go
 
 Let’s see if we have an active GPU:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 !nvidia-smi
@@ -44,7 +44,7 @@ similarities and differences.
 
 The following import is standard, replacing `import numpy as np`:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import jax
@@ -53,31 +53,31 @@ import jax.numpy as jnp
 
 Now we can use `jnp` in place of `np` for the usual array operations:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = jnp.asarray((1.0, 3.2, -1.5))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print(a)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print(jnp.sum(a))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print(jnp.mean(a))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print(jnp.dot(a, a))
@@ -85,13 +85,13 @@ print(jnp.dot(a, a))
 
 However, the array object `a` is not a NumPy array:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 type(a)
@@ -99,7 +99,7 @@ type(a)
 
 Even scalar-valued maps on arrays return JAX arrays.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 jnp.sum(a)
@@ -112,7 +112,7 @@ hardware accelerator (GPU or TPU).
 
 Operations on higher dimensional arrays are also similar to NumPy:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 A = jnp.ones((2, 2))
@@ -120,19 +120,19 @@ B = jnp.identity(2)
 A @ B
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 from jax.numpy import linalg
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 linalg.inv(B)   # Inverse of identity is identity
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 linalg.eigh(B)  # Computes eigenvalues and eigenvectors
@@ -146,7 +146,7 @@ This is standard for GPU computing and can lead to significant speed gains with 
 
 However, for some calculations precision matters.  In these cases 64 bit floats can be enforced via the command
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 jax.config.update("jax_enable_x64", True)
@@ -154,7 +154,7 @@ jax.config.update("jax_enable_x64", True)
 
 Let’s check this works:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 jnp.ones(3)
@@ -164,7 +164,7 @@ As a NumPy replacement, a more significant difference is that arrays are treated
 
 For example, with NumPy we can write
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import numpy as np
@@ -174,7 +174,7 @@ a
 
 and then mutate the data in memory:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a[0] = 1
@@ -183,14 +183,14 @@ a
 
 In JAX this fails:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = jnp.linspace(0, 1, 3)
 a
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a[0] = 1
@@ -198,7 +198,7 @@ a[0] = 1
 
 In line with immutability, JAX does not support inplace operations:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = np.array((2, 1))
@@ -206,7 +206,7 @@ a.sort()
 a
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = jnp.array((2, 1))
@@ -219,20 +219,20 @@ functional programming style.  More on this below.
 
 Note that, while mutation is discouraged, it is in fact possible with `at`, as in
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = jnp.linspace(0, 1, 3)
 id(a)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a.at[0].set(1)
@@ -240,7 +240,7 @@ a.at[0].set(1)
 
 We can check that the array is mutated by verifying its identity is unchanged:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 id(a)
@@ -250,7 +250,7 @@ id(a)
 
 Random numbers are also a bit different in JAX, relative to NumPy.  Typically, in JAX, the state of the random number generator needs to be controlled explicitly.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import jax.random as random
@@ -258,19 +258,19 @@ import jax.random as random
 
 First we produce a key, which seeds the random number generator.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 key = random.PRNGKey(1)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 type(key)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 print(key)
@@ -278,7 +278,7 @@ print(key)
 
 Now we can use the key to generate some random numbers:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x = random.normal(key, (3, 3))
@@ -287,7 +287,7 @@ x
 
 If we use the same key again, we initialize at the same seed, so the random numbers are the same:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 random.normal(key, (3, 3))
@@ -295,19 +295,19 @@ random.normal(key, (3, 3))
 
 To produce a (quasi-) independent draw, best practice is to “split” the existing key:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 key, subkey = random.split(key)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 random.normal(key, (3, 3))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 random.normal(subkey, (3, 3))
@@ -315,7 +315,7 @@ random.normal(subkey, (3, 3))
 
 The function below produces `k` (quasi-) independent random `n x n` matrices using this procedure.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def gen_random_matrices(key, n, k):
@@ -326,7 +326,7 @@ def gen_random_matrices(key, n, k):
     return matrices
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 matrices = gen_random_matrices(key, 2, 2)
@@ -336,7 +336,7 @@ for A in matrices:
 
 One point to remember is that JAX expects tuples to describe array shapes, even for flat arrays.  Hence, to get a one-dimensional array of normal random draws we use `(len, )` for the shape, as in
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 random.normal(key, (5, ))
@@ -354,7 +354,7 @@ launch on the GPU / TPU (or CPU if no accelerator is detected).
 
 To see the JIT compiler in action, consider the following function.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def f(x):
@@ -364,7 +364,7 @@ def f(x):
 
 Let’s build an array to call the function on.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 n = 50_000_000
@@ -373,7 +373,7 @@ x = jnp.ones(n)
 
 How long does the function take to execute?
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %time f(x).block_until_ready()
@@ -390,7 +390,7 @@ The code doesn’t run as fast as we might hope, given that it’s running on a 
 
 But if we run it a second time it becomes much faster:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %time f(x).block_until_ready()
@@ -410,14 +410,14 @@ specialized to floating point arrays of size `n = 50_000_000`.
 
 We can check this by calling `f` with a new array of different size.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 m = 50_000_001
 y = jnp.ones(m)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %time f(y).block_until_ready()
@@ -430,7 +430,7 @@ size.
 If we run again, the code is dispatched to the correct compiled version and we
 get faster execution.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %time f(y).block_until_ready()
@@ -439,7 +439,7 @@ get faster execution.
 The compiled versions for the previous array size are still available in memory
 too, and the following call is dispatched to the correct compiled code.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %time f(x).block_until_ready()
@@ -449,7 +449,7 @@ too, and the following call is dispatched to the correct compiled code.
 
 We can do even better if we manually JIT-compile the outer function.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_jit = jax.jit(f)   # target for JIT compilation
@@ -457,7 +457,7 @@ f_jit = jax.jit(f)   # target for JIT compilation
 
 Let’s run once to compile it:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_jit(x)
@@ -465,7 +465,7 @@ f_jit(x)
 
 And now let’s time it.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %time f_jit(x).block_until_ready()
@@ -478,7 +478,7 @@ This is because the array operations are fused and no intermediate arrays are cr
 Incidentally, a more common syntax when targetting a function for the JIT
 compiler is
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 @jax.jit
@@ -509,7 +509,7 @@ JAX will not usually throw errors when compiling impure functions but execution 
 
 Here’s an illustration of this fact, using global variables:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = 1  # global
@@ -519,13 +519,13 @@ def f(x):
     return a + x
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x = jnp.ones(2)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f(x)
@@ -535,13 +535,13 @@ In the code above, the global value `a=1` is fused into the jitted function.
 
 Even if we change `a`, the output of `f` will not be affected — as long as the same compiled version is called.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 a = 42
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f(x)
@@ -549,13 +549,13 @@ f(x)
 
 Changing the dimension of the input triggers a fresh compilation of the function, at which time the change in the value of `a` takes effect:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x = jnp.ones(3)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f(x)
@@ -575,7 +575,7 @@ We will see significant applications later in this lecture series.
 
 For now, here’s a very simple illustration involving the function
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def f(x):
@@ -584,13 +584,13 @@ def f(x):
 
 Let’s take the derivative:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_prime = jax.grad(f)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_prime(10.0)
@@ -598,7 +598,7 @@ f_prime(10.0)
 
 Let’s plot the function and derivative, noting that $ f'(x) = x $.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import matplotlib.pyplot as plt
@@ -635,7 +635,7 @@ Suppose that we want to evaluate this function on a square grid of $ x $ and $ y
 
 To clarify, here is the slow `for` loop version.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 @jax.jit
@@ -649,7 +649,7 @@ y = x
 z_loops = np.empty((n, n))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -666,7 +666,7 @@ OK, so how can we do the same operation in vectorized form?
 
 If you are new to vectorization, you might guess that we can simply write
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 z_bad = f(x, y)
@@ -674,7 +674,7 @@ z_bad = f(x, y)
 
 But this gives us the wrong result because JAX doesn’t understand the nested for loop.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 z_bad.shape
@@ -682,7 +682,7 @@ z_bad.shape
 
 Here is what we actually wanted:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 z_loops.shape
@@ -690,7 +690,7 @@ z_loops.shape
 
 To get the right shape and the correct nested for loop calculation, we can use a `meshgrid` operation designed for this purpose:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x_mesh, y_mesh = jnp.meshgrid(x, y)
@@ -698,7 +698,7 @@ x_mesh, y_mesh = jnp.meshgrid(x, y)
 
 Now we get what we want and the execution time is very fast.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -707,7 +707,7 @@ z_mesh = f(x_mesh, y_mesh).block_until_ready()
 
 Let’s run again to eliminate compile time.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -716,7 +716,7 @@ z_mesh = f(x_mesh, y_mesh).block_until_ready()
 
 Let’s confirm that we got the right answer.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 jnp.allclose(z_mesh, z_loops)
@@ -724,7 +724,7 @@ jnp.allclose(z_mesh, z_loops)
 
 Now we can set up a serious grid and run the same calculation (on the larger grid) in a short amount of time.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 n = 6000
@@ -733,7 +733,7 @@ y = x
 x_mesh, y_mesh = jnp.meshgrid(x, y)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -742,7 +742,7 @@ z_mesh = f(x_mesh, y_mesh).block_until_ready()
 
 Let’s run again to get rid of compile time.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -751,7 +751,7 @@ z_mesh = f(x_mesh, y_mesh).block_until_ready()
 
 But there is one problem here: the mesh grids use a lot of memory.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x_mesh.nbytes + y_mesh.nbytes
@@ -759,7 +759,7 @@ x_mesh.nbytes + y_mesh.nbytes
 
 By comparison, the flat array `x` is just
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x.nbytes  # and y is just a pointer to x
@@ -771,7 +771,7 @@ So let’s try a different approach using [jax.vmap](https://jax.readthedocs.io/
 
 First we vectorize `f` in `y`.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_vec_y = jax.vmap(f, in_axes=(None, 0))  
@@ -781,7 +781,7 @@ In the line above, `(None, 0)` indicates that we are vectorizing in the second a
 
 Next, we vectorize in the first argument, which is `x`.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_vec = jax.vmap(f_vec_y, in_axes=(0, None))
@@ -789,7 +789,7 @@ f_vec = jax.vmap(f_vec_y, in_axes=(0, None))
 
 With this construction, we can now call the function $ f $ on flat (low memory) arrays.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -798,7 +798,7 @@ z_vmap = f_vec(x, y).block_until_ready()
 
 We run it again to eliminate compile time.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time
@@ -809,7 +809,7 @@ The execution time is essentially the same as the mesh operation but we are usin
 
 And we produce the correct answer:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 jnp.allclose(z_vmap, z_mesh)
@@ -837,7 +837,7 @@ significantly faster execution.
 
 Here is one solution:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 M = 10_000_000
@@ -871,7 +871,7 @@ def compute_call_price_jax(β=β,
 
 Let’s run it once to compile it:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time 
@@ -880,7 +880,7 @@ compute_call_price_jax().block_until_ready()
 
 And now let’s time it:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 %%time 

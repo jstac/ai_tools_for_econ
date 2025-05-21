@@ -31,12 +31,6 @@
         \vspace{0.2em}
         \item \brown{Google JAX}
         \vspace{0.2em}
-        \item \brown{Google JAX}
-        \vspace{0.2em}
-        \item \brown{Google JAX}
-        \vspace{0.2em}
-        \item \brown{Google JAX}
-        \vspace{0.2em}
         \item \brown{Google JAX}\ldots
         \vspace{0.2em}
     \end{itemize}
@@ -48,7 +42,7 @@
     \frametitle{Topics}
 
     \begin{itemize}
-        \item History and background
+        \item Scientific computing: history and background
         \vspace{0.5em}
         \item JIT compilation
         \vspace{0.5em}
@@ -73,7 +67,7 @@
 
     \vspace{0.5em}
     \begin{itemize}
-        \item Some history of scientific computing
+        \item Languages and compilers
     \vspace{0.5em}
         \item Dynamic and static types
     \vspace{0.5em}
@@ -159,6 +153,7 @@ x = 6.240251
 
 \end{frame}
 
+
 \begin{frame}
 
     Pros
@@ -202,6 +197,24 @@ for i in range(n-1):
 print(k)
 
     \end{minted}
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Python is \emp{interpreted} rather than compiled
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item code is executed statement by statement
+    \vspace{0.5em}
+        \item data types are queried on the fly
+    \vspace{0.5em}
+        \item arithmetic operations require method resolution
+    \vspace{0.5em}
+        \item immediate feedback 
+    \end{itemize}
 
 \end{frame}
 
@@ -268,9 +281,21 @@ print(k)
 \begin{frame}
     
     \begin{enumerate}
-        \item Arrays are defined in a high-level interface
+        \item Arrays defined with high-level commands 
+        \vspace{0.5em}
+        %
+        \begin{itemize}
+            \item (Python / NumPy API)
+        \end{itemize}
+        %
         \vspace{0.5em}
         \item Execution takes place in an efficient low-level environment
+        \vspace{0.5em}
+        %
+        \begin{itemize}
+            \item Efficient machine code (compiled C / Fortran)
+        \end{itemize}
+        %
         \vspace{0.5em}
         \item Results are returned to the high-level interface
     \end{enumerate}
@@ -319,7 +344,7 @@ print(k)
 
     \vspace{0.5em}
     \begin{itemize}
-        \item Operations are passed to specialized to machine code 
+        \item Operations are passed to specialized machine code 
         \vspace{0.5em}
         \item Type-checking is paid per array, not per array element
     \end{itemize}
@@ -331,7 +356,7 @@ print(k)
     \begin{itemize}
         \item Can be highly memory intensive (intermediate arrays)
         \vspace{0.5em}
-        \item Fails to specialize on array \emp{shapes}
+        \item \underline{Fails} to specialize on array \emp{shapes}
         \vspace{0.5em}
         \item What if we can't convert problems to array-processing operations?
     \end{itemize}
@@ -358,15 +383,16 @@ b = [0.5  1.0]'
 x = inv(A) * b
     \end{minted}
     
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    But also has fast loops via an efficient JIT compiler
+
 \end{frame}
 
 
 \begin{frame}
     
-    But also has fast loops via an efficient JIT compiler
-
-    \vspace{0.5em}
-    \vspace{0.5em}
     \Eg Suppose, again, that we want to compute 
     %
     \begin{equation*}
@@ -411,6 +437,39 @@ solow(0.2)
 
 \end{frame}
 
+
+\begin{frame}
+    
+    Pros:
+
+    \begin{itemize}
+        \item fast execution --- assuming correct type inference
+        \vspace{0.2em}
+        \item dynamically typed\ldots (but compiler wants type stability)
+        \vspace{0.2em}
+        \item close to the maths
+    \end{itemize}
+
+        \vspace{0.2em}
+        \vspace{0.2em}
+        \vspace{0.2em}
+        \vspace{0.2em}
+        \vspace{0.2em}
+        \vspace{0.2em}
+    Cons:
+
+    \begin{itemize}
+        \item Everything compiled might not be optimal (e.g., debugging)
+        \vspace{0.2em}
+        \item Slow first runs
+        \vspace{0.2em}
+        \item Package instability
+        \vspace{0.2em}
+        \item Repeated breaking changes
+    \end{itemize}
+
+\end{frame}
+
 \begin{frame}[fragile]
     \frametitle{Python + Numba --- same architecture, same speed}
     
@@ -433,10 +492,14 @@ solow(0.2)
 \end{frame}
 
 
+\begin{frame}
+    
+    OK, let's talk about the next generation\ldots
+
+\end{frame}
 
 
 \begin{frame}
-    \frametitle{What's JAX?}
 
     \begin{figure}
        \centering
@@ -533,18 +596,15 @@ solow(0.2)
             \vspace{0.5em}
         \item Automatic differentiation
             \vspace{0.5em}
-        \item Accelerated linear algebra
+        \item XLA (accelerated linear algebra)
     \end{itemize}
 
-            \vspace{0.5em}
-            \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
 
-            \vspace{0.5em}
     \pause
-    \begin{itemize}
-        \item significant advantages over C / Fortran / NumPy / Julia / Numba 
-        \item But is not uniformly ``better'' --- discuss later
-    \end{itemize}
+    Parallelization is a major focus\ldots
 
 
 \end{frame}
@@ -568,6 +628,22 @@ solow(0.2)
 \end{frame}
 
 
+\begin{frame}[fragile]
+    \frametitle{Accelerated linear algebra (XLA)}
+
+    Array operations are
+    %
+    \begin{itemize}
+        \item sent to precompiled XLA device code that takes array shapes as a
+            parameter
+        \vspace{0.5em}
+        \item automatically parallelized 
+        \vspace{0.5em}
+        \item automatically optimized for and deployed to available hardware
+    \end{itemize}
+
+\end{frame}
+
 
 \begin{frame}[fragile]
     \frametitle{Just-in-time compilation}
@@ -575,23 +651,58 @@ solow(0.2)
     \begin{minted}{python}
 @jax.jit
 def f(x):
-    """
-    A function that transforms an array x.
-    """
     term1 = 2 * jnp.sin(3 * x) * jnp.cos(x/2)
     term2 = 0.5 * x**2 * jnp.cos(5*x) / (1 + 0.1 * x**2)
     term3 = 3 * jnp.exp(-0.2 * (x - 4)**2) * jnp.sin(10*x)
     return term1 + term2 + term3 
     \end{minted}
 
-            \vspace{0.5em}
-            \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+
     \begin{itemize}
-        \item Compiles at runtime based on specified shape \& data type
+        \item Compiles at first call 
+        \item Compiler specializes on \brown{both} shape and data type
     \end{itemize}
 
 \end{frame}
 
+\begin{frame}
+    
+    JIT compiler tools for optimization
+
+    \begin{itemize}
+        \item Operations combined into fused kernels for GPU/TPU
+        \vspace{0.5em}
+        \item Eliminate intermediate buffers / memory writes and reads
+        \vspace{0.5em}
+        \item Loop unrolling
+        \vspace{0.5em}
+        \item Specialized algorithms
+        \vspace{0.5em}
+        \item Memory layout optimization for multi-dimensional arrays
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Summary from Google Gemini}
+    
+    Precompiled XLA kernels are like highly efficient, general-purpose tools
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    JAX's JIT compiler acts like a master engineer 
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+    \begin{itemize}
+        \item Designs a custom assembly line using these tools
+        \vspace{0.5em}
+        \item Precisely tailored to the dimensions of the specific ``parts'' (array shapes) being processed
+    \end{itemize}
+
+
+\end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Automatic differentiation}
@@ -616,22 +727,6 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
 \end{frame}
 
 
-\begin{frame}[fragile]
-    \frametitle{Accelerated linear algebra (XLA)}
-
-    Array operations are
-    %
-    \begin{itemize}
-        \item JIT-compiled
-    \vspace{0.5em}
-        \item automatically parallelized
-    \vspace{0.5em}
-        \item automatically optimized for and deployed to available hardware
-    \end{itemize}
-    
-
-\end{frame}
-
 
 \begin{frame}
     
@@ -642,10 +737,16 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
         \item Can specialize machine code to data types \textbf{and} shapes!
         \vspace{0.5em}
         \vspace{0.5em}
-        \item Automatically matches tasks with accelerators (GPU / TPU)
+        \item Automatically matches tasks with accelerators
         \vspace{0.5em}
         \vspace{0.5em}
-        \item Fuses array operations for speed and memory efficiency
+        \item Same code, multiple backends (CPUs, GPUs, TPUs)
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Can fuse array operations for speed and memory efficiency
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Integrated efficient autodiff
     \end{itemize}
 
 \end{frame}
@@ -655,18 +756,17 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
     Advantages of JAX (vs PyTorch / Tensorflow / etc.) for economists:
     %
     \begin{itemize}
-        \item exposes low level functions
-            \vspace{0.5em}
         \item elegant functional programming style -- close to maths
             \vspace{0.5em}
         \item elegant autodiff tools
             \vspace{0.5em}
         \item array operations follow standard NumPy API
-            \vspace{0.5em}
-        \item automatic parallelization
-            \vspace{0.5em}
-        \item same code, multiple backends (CPUs, GPUs, TPUs)
     \end{itemize}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+
+    Exposes low level functions / fewer off-the-shelf solutions
 
 \end{frame}
 
@@ -685,10 +785,11 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
     \vspace{0.5em}
     \vspace{0.5em}
     \vspace{0.5em}
-    Key feature: Functions are pure
+    Key feature: functions are pure
 
     \begin{itemize}
         \item Deterministic: same input $\implies$ same output 
+    \vspace{0.5em}
         \item Have no side effects (don't modify state outside their scope)
     \end{itemize}
 
@@ -697,31 +798,44 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
 
 \begin{frame}[fragile]
 
-    A non-pure function
+    A \brown{non-pure} function
+    \vspace{0.5em}
+    \vspace{0.5em}
 
     \begin{minted}{python}
-tax_rate = 0.1  # Global 
-price = 10.0    # Global
+tax_rate = 0.1 
+prices = [10.0, 20.0] 
 
-def add_tax_non_pure():
-    global price                
-    # The next line both accesses and modifies global state
-    price = price * (1 + tax_rate)    
-    return price 
+def add_tax(prices):
+    for i, price in enumerate(prices):
+        prices[i] = price * (1 + tax_rate)    
+    print('Modified prices')
     \end{minted}
+
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Accesses global state (\texttt{tax\_rate})
+        \item Has side effects (modifies \texttt{prices} -- outside function's scope)
+    \end{itemize}
     
 \end{frame}
 
 
+
 \begin{frame}[fragile]
 
-    A pure function
+    A \brown{pure} function
+    \vspace{0.5em}
+    \vspace{0.5em}
 
     \begin{minted}{python}
+tax_rate = 0.1 
+prices = [10.0, 20.0] 
 
-def add_tax_non_pure(price, tax_rate=0.1):
-    price = price * (1 + tax_rate)    
-    return price 
+def add_tax_pure(prices, tax_rate):
+    return [price * (1 + tax_rate) for price in prices]
     \end{minted}
     
 \end{frame}
@@ -738,7 +852,7 @@ def add_tax_non_pure(price, tax_rate=0.1):
     \vspace{0.5em}
         \item Promotes deterministic behavior and hence reproducibility
     \vspace{0.5em}
-        \item Prevents subtle bugs that arise from mutating shared state
+        \item Prevents bugs that arise from mutating shared state
     \end{itemize}
 
 \end{frame}
@@ -750,11 +864,11 @@ def add_tax_non_pure(price, tax_rate=0.1):
     Advantages for JAX:
 
      \begin{itemize}
-         \item Pure functions are easier to differentiate (don't modify external state)
-    \vspace{0.5em}
+         \item Pure functions are easier to differentiate 
+        \vspace{0.5em}
          \item Pure functions are easier to parallelize and optimize (don't
              depend on shared mutable state)
-    \vspace{0.5em}
+        \vspace{0.5em}
          \item Transformations can be composed cleanly (predictable results)
      \end{itemize}
 
@@ -764,14 +878,15 @@ def add_tax_non_pure(price, tax_rate=0.1):
 \begin{frame}
     \frametitle{JAX PyTrees}
 
-    A PyTree is a concept in the JAX library that refers to a tree-like data structure built from Python containers.
+    A tree-like data structure built from Python containers
 
-    \Egs
+        \vspace{0.5em}
+    A concept, not a data type
+
+    \Eg
 
     \begin{itemize}
-        \item A dictionary of lists of parameters
-        \vspace{0.5em}
-        \item A list of dictionaries of parameters, etc.
+        \item A list of dictionaries, each dictionary contains parameters
     \end{itemize}
 
     JAX can
@@ -790,9 +905,76 @@ def add_tax_non_pure(price, tax_rate=0.1):
 \begin{frame}
     
     
-    \resizebox{1.0\textwidth}{!}{
+    \resizebox{0.9\textwidth}{!}{
         \input{pytree_fig}
     }
+
+\end{frame}
+
+
+\begin{frame}
+    
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[
+  scale=0.5, transform shape, % Scale down the entire figure
+  level distance=1.5cm,
+  level 1/.style={sibling distance=2.5cm},
+  level 2/.style={sibling distance=2cm},
+  every node/.style={draw, rounded corners, fill=white, drop shadow, align=center, font=\sffamily},
+  edge from parent/.style={thick, draw, -{Stealth[length=6pt]}},
+  pytree/.style={draw, rounded corners, fill=blue!10, minimum width=1.8cm, minimum height=0.9cm},
+  pytree2/.style={draw, rounded corners, fill=green!10, minimum width=1.8cm, minimum height=0.9cm},
+  result/.style={draw, rounded corners, fill=purple!10, minimum width=1.8cm, minimum height=0.9cm},
+  operation/.style={draw, circle, fill=red!20, inner sep=2pt}
+]
+
+% First pytree - unchanged
+\node[pytree] (root1) at (-5,0) {pytree1};
+\node[pytree, below left=1.5cm and 1.2cm of root1] (a1) {\texttt{'a'}: [1, 2, 3]};
+\node[pytree, below right=1.5cm and 1.2cm of root1] (b1) {\texttt{'b'}: dict};
+\node[pytree, below left=1.5cm and 0.4cm of b1] (c1) {\texttt{'c'}: [4, 5, 6]};
+\node[pytree, below right=1.5cm and 0.4cm of b1] (d1) {\texttt{'d'}: 7};
+
+\draw[edge from parent] (root1) -- (a1);
+\draw[edge from parent] (root1) -- (b1);
+\draw[edge from parent] (b1) -- (c1);
+\draw[edge from parent] (b1) -- (d1);
+
+% Second pytree - unchanged
+\node[pytree2] (root2) at (5,0) {pytree2};
+\node[pytree2, below left=1.5cm and 1.2cm of root2] (a2) {\texttt{'a'}: [10, 20, 30]};
+\node[pytree2, below right=1.5cm and 1.2cm of root2] (b2) {\texttt{'b'}: dict};
+\node[pytree2, below left=1.5cm and 0.4cm of b2] (c2) {\texttt{'c'}: [40, 50, 60]};
+\node[pytree2, below right=1.5cm and 0.4cm of b2] (d2) {\texttt{'d'}: 70};
+
+\draw[edge from parent] (root2) -- (a2);
+\draw[edge from parent] (root2) -- (b2);
+\draw[edge from parent] (b2) -- (c2);
+\draw[edge from parent] (b2) -- (d2);
+
+
+% Result pytree - shifted down from -6 to -7.5
+\node[result] (rootR) at (0,-7.5) {result};
+\node[result, below left=1.5cm and 1.2cm of rootR] (aR) {\texttt{'a'}: [11, 22, 33]};
+\node[result, below right=1.5cm and 1.2cm of rootR] (bR) {\texttt{'b'}: dict};
+\node[result, below left=1.5cm and 0.4cm of bR] (cR) {\texttt{'c'}: [44, 55, 66]};
+\node[result, below right=1.5cm and 0.4cm of bR] (dR) {\texttt{'d'}: 77};
+
+\draw[edge from parent] (rootR) -- (aR);
+\draw[edge from parent] (rootR) -- (bR);
+\draw[edge from parent] (bR) -- (cR);
+\draw[edge from parent] (bR) -- (dR);
+
+% Arrows from input pytrees to result - adjusted for new result position
+%\draw[-{Stealth[length=6pt]}, thick, dashed, red] (root1) to[out=-30, in=150] (rootR);
+%\draw[-{Stealth[length=6pt]}, thick, dashed, red] (root2) to[out=-150, in=30] (rootR);
+
+
+\end{tikzpicture}
+\caption{\texttt{jax.tree.map(lambda x, y: x + y, pytree1, pytree2)}}
+\end{figure}
 
 \end{frame}
 
@@ -802,7 +984,7 @@ def add_tax_non_pure(price, tax_rate=0.1):
     \begin{minted}{python}
 # Apply gradient updates to all parameters
 def sgd_update(params, grads, learning_rate):
-    return jax.tree_map(
+    return jax.tree.map(
         lambda p, g: p - learning_rate * g, 
         params, 
         grads
