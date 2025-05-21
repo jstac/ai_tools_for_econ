@@ -386,38 +386,82 @@
     
 \end{frame}
 
-
+\begin{frame}[fragile]
+    \frametitle{GPU architecture}
+    \begin{figure}
+        \centering
+        \scalebox{0.09}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]{gpu_arch.png}}
+        \caption{NVIDIA H100 with 16896 CUDA cores and 128 
+        streaming multiprocessors (SMs) ({\footnotesize
+        \href{
+           https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/
+           }{NVIDIA Blog}})}
+     \end{figure}
+\end{frame}
 
 \begin{frame}[fragile]
-
-    \emp{Multithreading} and \emp{multiprocessing}
-
+    \frametitle{Single-GPU parallelization}
+  
     \vspace{0.5em}
     \begin{itemize}
-        \item Multithreading over GPU cores / compute units 
+      \item Vectorizes function across the many cores 
+      (SMs).
+      \item Automatically scales with more 
+      multiprocessors on that one device.
     \end{itemize}
-    
+  
+    \vspace{0.5em}
     \begin{minted}{python}
 def function(data):
     # perform a calculation based on input data
     return output
 vectorized_function = vmap(function)  
-# Perform the same action on a collection of data sets
+# Perform the same action on a batch of data sets
 outputs = vectorized_function(data_sets)   
     \end{minted}
+     {\footnotesize
+     \href{https://github.com/stanford-cs336/spring2025-lectures/blob/main/nonexecutable/2025%20Lecture%205%20-%20GPUs.pdf
+     }{More on GPUs}}
+  \end{frame}
 
-    \vspace{0.5em}
+  \begin{frame}
+    \begin{figure}
+        \begin{center}
+         \scalebox{0.75}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]
+         {automatic-scalability.png}}
+        \end{center}
+     \end{figure}
+     \footnotesize{
+     \href{
+        https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html?highlight=multiple%2520GPU#a-scalable-programming-model
+        }{CUDA Documentation}
+        }
+  \end{frame}
+  
+  \begin{frame}[fragile]
+    \frametitle{Multi-GPU parallelization}
+  
     \vspace{0.5em}
     \begin{itemize}
-        \item Multiprocessing over all GPUs in a farm / cluster 
+      \item Splits your batch across several GPUs.
+      \item Extended GPU Memory 
+      (EGM) via NVLink lets GPUs in a node share memory.
     \end{itemize}
-
+    \begin{figure}
+        \begin{center}
+         \scalebox{0.15}{\includegraphics[trim={0cm 0cm 0cm 0cm},clip]
+         {egm-c2c-intro.png}}
+        \end{center}
+     \end{figure}
+     \footnotesize{
+        \href{https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html?highlight=multiple%2520GPU#unified-memory-introduction
+    }{CUDA Documentation}}
+    \vspace{0.5em}
     \begin{minted}{python}
 parallel_function = pmap(function)  
 outputs = parallel_function(list_of_tasks)  
     \end{minted}
-
-\end{frame}
+  \end{frame}
 
 \begin{frame}
 
