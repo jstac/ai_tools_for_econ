@@ -1,0 +1,50 @@
+\begin{tikzpicture}[
+    scale=0.2,
+    node distance=1.5cm,
+    block/.style={rectangle, draw, fill=white, text width=3.5cm, align=center, rounded corners, minimum height=1cm, font=\sffamily},
+    process/.style={rectangle, draw, fill=white, text width=3.5cm, align=center, rounded corners, minimum height=1cm, font=\sffamily},
+    compiler/.style={rectangle, draw, fill=compilerpurple!20, text width=4cm, align=center, rounded corners, minimum height=1.5cm, font=\sffamily},
+    kernel/.style={ellipse, draw, fill=xlagreen!20, text width=3cm, align=center, minimum height=1cm, font=\sffamily},
+    device/.style={rectangle, draw, fill=devicegray!20, text width=6cm, align=center, minimum height=1.5cm, font=\sffamily\bfseries, rounded corners},
+    arrow/.style={-Latex, thick, jaxblue},
+    label_text/.style={font=\sffamily\small, text=black},
+    title_box/.style={rectangle, fill=jaxblue!10, rounded corners, inner sep=5pt, font=\sffamily\bfseries, align=center}
+]
+
+    % Left Path: Simple Operations
+    \node (python_simple) [block, fill=pythonorange!20] {Python Code: \\ `x + y`};
+    \node (jax_dispatch_simple) [process, below=of python_simple] {JAX Dispatch \\ (for each op)};
+    \node (xla_kernel_add) [kernel, below=of jax_dispatch_simple] {Precompiled XLA kernel (Add)};
+    % Removed xla_kernel_mul and xla_kernel_sub nodes
+
+    % Right Path: JIT-Compiled Operations
+    \node (python_jit) [block, fill=pythonorange!20, right=4cm of python_simple] {Python Function: \\ `@jax.jit \\ def func(x, y): \\ \quad return x + y * 2`};
+    \node (jax_tracing) [process, fill=tracingyellow!20, below=of python_jit] {JAX Tracing \\ (to Jaxpr IR)};
+    \node (xla_compiler) [compiler, below=of jax_tracing] {XLA JIT Compiler \\ (Master Builder)};
+    \node (fused_kernel) [kernel, fill=xlagreen!40, below=of xla_compiler] {Fused XLA kernel \\ (optimized for `func`)};
+
+    % Device Execution (Common End Point)
+    % Adjusted positioning for device node due to removed kernels
+    \node (device) [device, below=3cm of $(xla_kernel_add.south)!0.2!(fused_kernel.south)$] {Device Execution \\ (CPU / GPU / TPU)};
+
+    % Arrows for Simple Operations
+    \draw [arrow] (python_simple) -- (jax_dispatch_simple);
+    \draw [arrow] (jax_dispatch_simple) -- (xla_kernel_add);
+    \draw [arrow] (xla_kernel_add) -- (device);
+    % Removed dashed arrows to xla_kernel_mul and xla_kernel_sub
+
+    % Arrows for JIT-Compiled Operations
+    \draw [arrow] (python_jit) -- (jax_tracing);
+    \draw [arrow] (jax_tracing) -- (xla_compiler);
+    \draw [arrow] (xla_compiler) -- (fused_kernel);
+    \draw [arrow] (fused_kernel) -- (device);
+
+    \node [label_text, right=0.6cm of xla_compiler.north east, anchor=south
+    west, text width=5cm] {Builds a custom, optimized kernel using existing, generic kernels};
+
+    % Fit boxes for visual grouping
+    % Adjusted fit box for simple path
+    \node[fit=(python_simple)(xla_kernel_add)(jax_dispatch_simple), draw, dashed, inner sep=10pt, label_text, label={[label_text]above:individual dispatch}] (simple_path_box) {};
+    \node[fit=(python_jit)(fused_kernel)(jax_tracing), draw, dashed, inner sep=10pt, label_text, label={[label_text]above:function compilation}] (jit_path_box) {};
+\end{tikzpicture}
+
