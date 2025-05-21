@@ -212,8 +212,6 @@ print(k)
         \item data types are queried on the fly
     \vspace{0.5em}
         \item arithmetic operations require method resolution
-    \vspace{0.5em}
-        \item immediate feedback 
     \end{itemize}
 
 \end{frame}
@@ -225,8 +223,8 @@ print(k)
     \begin{itemize}
         \item easy to write
         \item high portability
+        \item immediate feedback --- high interactivity
         \item easy to debug
-        \item high interactivity
     \end{itemize}
 
     \vspace{0.5em}
@@ -358,7 +356,7 @@ print(k)
         \vspace{0.5em}
         \item \underline{Fails} to specialize on array \emp{shapes}
         \vspace{0.5em}
-        \item What if we can't convert problems to array-processing operations?
+        \item Limited --- how would you accelerate the Solow code using NumPy?
     \end{itemize}
 
 \end{frame}
@@ -425,7 +423,7 @@ function solow(k0, α=0.4, δ=0.1, n=1_000)
     return k
 end
 
-solow(0.2)
+solow(0.2)  # JIT-compiled at first call
     \end{minted}
 
     \vspace{0.5em}
@@ -459,10 +457,14 @@ solow(0.2)
     Cons:
 
     \begin{itemize}
-        \item Everything compiled might not be optimal (e.g., debugging)
+        \item Everything compiled might not be optimal 
         \vspace{0.2em}
-        \item Slow first runs
-        \vspace{0.2em}
+        \begin{itemize}
+            \item debugging is more challenging
+            \vspace{0.2em}
+            \item slow first runs
+            \vspace{0.2em}
+        \end{itemize}
         \item Package instability
         \vspace{0.2em}
         \item Repeated breaking changes
@@ -525,9 +527,9 @@ solow(0.2)
         \item Developed by \href{https://research.google/}{Google Research}
             (prev.\ Google Brain)
             \vspace{0.5em}
-        \item Easy-to-use NumPy-style API for array operations
+        \item NumPy-style API for array operations
             \vspace{0.5em}
-        \item Simple GPU/TPU acceleration 
+        \item GPU/TPU acceleration 
             \vspace{0.5em}
         \item Automatic differentiation
             \vspace{0.5em}
@@ -576,7 +578,7 @@ solow(0.2)
     \vspace{0.5em}
     \vspace{0.5em}
     \begin{itemize}
-        \item Citation count $= ~30$K
+        \item Citation count $= ~35$K
         \vspace{0.5em}
         \item Nobel Prize in Chemistry 2024
     \end{itemize}
@@ -586,25 +588,26 @@ solow(0.2)
 
 \begin{frame}
 
-    ``The acronym JAX stands for \brown{Just After eXecution}, since to com-
-    pile a function we first monitor its execution once in Python.''
-
-            \vspace{0.5em}
+    ``The acronym JAX stands for \brown{Just After eXecution}''
 
     \begin{itemize}
-        \item Just-in-time compilation
+        \item monitor function execution once and then compile
+    \end{itemize} 
+
             \vspace{0.5em}
-        \item Automatic differentiation
             \vspace{0.5em}
-        \item XLA (accelerated linear algebra)
+            \vspace{0.5em}
+
+    Another acronym:
+
+    \begin{itemize}
+        \item \brown{J}ust-in-time compilation
+            \vspace{0.5em}
+        \item \brown{A}utomatic differentiation
+            \vspace{0.5em}
+        \item \brown{X}LA (accelerated linear algebra)
     \end{itemize}
 
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \vspace{0.5em}
-
-    \pause
-    Parallelization is a major focus\ldots
 
 
 \end{frame}
@@ -646,7 +649,7 @@ solow(0.2)
 
 
 \begin{frame}[fragile]
-    \frametitle{Just-in-time compilation}
+    \frametitle{Explicit just-in-time compilation}
     
     \begin{minted}{python}
 @jax.jit
@@ -661,11 +664,25 @@ def f(x):
     \vspace{0.5em}
 
     \begin{itemize}
-        \item Compiles at first call 
+        \item Compiles at first call (e.g., \texttt{result = f(x)})
         \item Compiler specializes on \brown{both} shape and data type
     \end{itemize}
 
 \end{frame}
+
+
+\begin{frame}
+
+    Precompiled vs compiled in JAX:
+
+    \begin{figure}[h!]
+        \centering
+        \scalebox{0.45}{\input{compiler_diagram.tex}}
+    \end{figure}
+    
+\end{frame}
+
+
 
 \begin{frame}
     
@@ -683,36 +700,12 @@ def f(x):
         \item Memory layout optimization for multi-dimensional arrays
     \end{itemize}
 
-\end{frame}
-
-\begin{frame}{Summary from Google Gemini}
-    
-    Precompiled XLA kernels are like highly efficient, general-purpose tools
-
         \vspace{0.5em}
         \vspace{0.5em}
-    JAX's JIT compiler acts like a master engineer 
-
-        \vspace{0.5em}
-        \vspace{0.5em}
-    \begin{itemize}
-        \item Designs a custom assembly line using these tools
-        \vspace{0.5em}
-        \item Precisely tailored to the dimensions of the specific ``parts'' (array shapes) being processed
-    \end{itemize}
-
+    ``JAX's JIT compiler acts like a master engineer''
 
 \end{frame}
 
-\begin{frame}
-
-    \begin{figure}[h!]
-    \centering
-    \scalebox{0.5}{\input{compiler_diagram.tex}}
-\end{figure}
-    
-
-\end{frame}
 
 
 \begin{frame}[fragile]
@@ -739,70 +732,42 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
 
 
 
-\begin{frame}
-    
-    Advantages over NumPy / MATLAB
-
-    \vspace{0.5em}
-    \begin{itemize}
-        \item Can specialize machine code to data types \textbf{and} shapes!
-        \vspace{0.5em}
-        \vspace{0.5em}
-        \item Automatically matches tasks with accelerators
-        \vspace{0.5em}
-        \vspace{0.5em}
-        \item Same code, multiple backends (CPUs, GPUs, TPUs)
-        \vspace{0.5em}
-        \vspace{0.5em}
-        \item Can fuse array operations for speed and memory efficiency
-        \vspace{0.5em}
-        \vspace{0.5em}
-        \item Integrated efficient autodiff
-    \end{itemize}
-
-\end{frame}
-
-\begin{frame}
-
-    Advantages of JAX (vs PyTorch / Tensorflow / etc.) for economists:
-    %
-    \begin{itemize}
-        \item elegant functional programming style -- close to maths
-            \vspace{0.5em}
-        \item elegant autodiff tools
-            \vspace{0.5em}
-        \item array operations follow standard NumPy API
-    \end{itemize}
-
-            \vspace{0.5em}
-            \vspace{0.5em}
-
-    Exposes low level functions / fewer off-the-shelf solutions
-
-\end{frame}
-
 \begin{frame}{Features of JAX}
 
-    Let's look at some useful features
+    Let's review some other features
+
+        \vspace{0.5em}
+
+    \begin{itemize}
+        \item Functional programming
+        \vspace{0.5em}
+        \item PyTrees
+    \end{itemize}
     
 \end{frame}
 
 \begin{frame}
     \frametitle{Functional Programming}
     
-    JAX adopts a \emp{functional programming style}
+    JAX adopts a \underline{functional programming style}
 
     \vspace{0.5em}
     \vspace{0.5em}
     \vspace{0.5em}
     \vspace{0.5em}
-    Key feature: functions are pure
+    Key feature: \emp{functions are pure!}
 
     \begin{itemize}
         \item Deterministic: same input $\implies$ same output 
-    \vspace{0.5em}
+        \vspace{0.5em}
         \item Have no side effects (don't modify state outside their scope)
     \end{itemize}
+
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \vspace{0.5em}
+    Functional programming usually adopts immutable data
 
 \end{frame}
 
@@ -820,16 +785,13 @@ prices = [10.0, 20.0]
 def add_tax(prices):
     for i, price in enumerate(prices):
         prices[i] = price * (1 + tax_rate)    
-    print('Modified prices')
+    print('Modified prices: ', prices)
     \end{minted}
 
     \vspace{0.5em}
     \vspace{0.5em}
     \vspace{0.5em}
-    \begin{itemize}
-        \item Accesses global state (\texttt{tax\_rate})
-        \item Has side effects (modifies \texttt{prices} -- outside function's scope)
-    \end{itemize}
+    Why is this not pure?
     
 \end{frame}
 
@@ -891,22 +853,18 @@ def add_tax_pure(prices, tax_rate):
 
     A tree-like data structure built from Python containers
 
-        \vspace{0.5em}
+    \vspace{0.5em}
     A concept, not a data type
 
-    \Eg
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \vspace{0.5em}
+    \Egs
 
     \begin{itemize}
         \item A list of dictionaries, each dictionary contains parameters
-    \end{itemize}
-
-    JAX can
-
-    \begin{itemize}
-        \item apply functions to all leaves in a PyTree structure
-        \vspace{0.5em}
-        \item differentiate functions with respect to the leaves of PyTrees
-        \vspace{0.5em}
+        \item A dictionary of lists 
+        \item A dictionary of lists of dictionaries
         \item etc.
     \end{itemize}
 
@@ -922,6 +880,21 @@ def add_tax_pure(prices, tax_rate):
 
 \end{frame}
 
+
+\begin{frame}
+    
+    JAX can
+
+    \begin{itemize}
+        \item apply functions to all leaves in a PyTree structure
+        \vspace{0.5em}
+        \item differentiate functions with respect to the leaves of PyTrees
+        \vspace{0.5em}
+        \item etc.
+    \end{itemize}
+
+
+\end{frame}
 
 \begin{frame}
     
@@ -1010,6 +983,48 @@ updated_params = sgd_update(params, grads, 0.01)
 
 \end{frame}
 
+
+\begin{frame}{Summary}
+    
+    Advantages over NumPy / MATLAB
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Can specialize machine code to data types \textbf{and} shapes!
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Automatically matches tasks with accelerators
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Same code, multiple backends (CPUs, GPUs, TPUs)
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Can fuse array operations for speed and memory efficiency
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item Integrated efficient autodiff
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    Advantages of JAX (vs PyTorch / Tensorflow / etc.) for economists:
+    %
+    \begin{itemize}
+        \item elegant functional programming style -- close to maths
+            \vspace{0.5em}
+        \item elegant autodiff tools
+            \vspace{0.5em}
+        \item array operations follow standard NumPy API
+    \end{itemize}
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+
+    Exposes low level functions / fewer off-the-shelf solutions
+
+\end{frame}
 
 
 \end{document}
