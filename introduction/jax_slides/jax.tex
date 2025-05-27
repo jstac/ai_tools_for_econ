@@ -753,28 +753,60 @@ grad_loss = jit(grad(loss))  # Now use gradient descent
     
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
     \frametitle{Functional Programming}
     
-    JAX adopts a \underline{functional programming style}
+    JAX adopts a \underline{functional} programming style
 
     \vspace{0.5em}
-    \vspace{0.5em}
-    \vspace{0.5em}
-    \vspace{0.5em}
-    Key feature: \emp{functions are pure!}
+    Key feature: functions are \emp{pure}!
+
+
+    \begin{minted}{python}
+
+def f(θ, x):
+  for W, b in θ:
+    w = W @ x + b
+    x = jnp.tanh(w)  
+  return x
+
+def loss(θ, x, y):
+  return jnp.sum((y - f(θ, x))**2)
+
+    \end{minted}
+
+
+\end{frame}
+
+\begin{frame}
+    
+    Pure functions
+
+    \begin{enumerate}
+        \item \emp{Deterministic}
+        \vspace{0.5em}
+        \item \emp{No side effects}
+    \end{enumerate}
+
+
+    Deterministic means
 
     \begin{itemize}
-        \item Deterministic: same input $\implies$ same output 
+        \item Same input $\implies$ same output 
         \vspace{0.5em}
-        \item Have no side effects (don't modify state outside their scope)
+        \item Outputs do not depend on global state
     \end{itemize}
 
 
+    No side effects
+
+    \begin{itemize}
+        \item Won't change global state
         \vspace{0.5em}
+        \item Won't modify data passed to the function
         \vspace{0.5em}
-        \vspace{0.5em}
-    Functional programming usually adopts immutable data
+        \item Typically use immutable data
+    \end{itemize}
 
 \end{frame}
 
@@ -793,6 +825,7 @@ def add_tax(prices):
     for i, price in enumerate(prices):
         prices[i] = price * (1 + tax_rate)    
     print('Modified prices: ', prices)
+    return prices
     \end{minted}
 
     \vspace{0.5em}
@@ -812,7 +845,7 @@ def add_tax(prices):
 
     \begin{minted}{python}
 tax_rate = 0.1 
-prices = [10.0, 20.0] 
+prices = (10.0, 20.0) 
 
 def add_tax_pure(prices, tax_rate):
     return [price * (1 + tax_rate) for price in prices]
@@ -842,18 +875,29 @@ def add_tax_pure(prices, tax_rate):
     Advantages for JAX:
 
      \begin{itemize}
-        \item Data dependencies are explicit, which helps with understanding and optimizing complex computations 
+        \item Data dependencies are explicit, which helps with optimizing complex computations 
         \vspace{0.5em}
-         \item Pure functions are easier to differentiate 
+         \item Pure functions are easier to differentiate (autodiff)
         \vspace{0.5em}
          \item Pure functions are easier to parallelize and optimize (don't
              depend on shared mutable state)
         \vspace{0.5em}
-         \item Transformations can be composed cleanly (predictable results)
+         \item Transformations can be composed cleanly 
+     \end{itemize}
+
+        \vspace{0.5em}
+        \vspace{0.5em}
+
+     In summary, functional programming is good for 
+     %
+     \begin{itemize}
+         \item JIT, autodiff, \& parallelization
      \end{itemize}
 
 
 \end{frame}
+
+
 
 \begin{frame}
     \frametitle{JAX PyTrees}
@@ -876,6 +920,9 @@ def add_tax_pure(prices, tax_rate):
     \end{itemize}
 
 \end{frame}
+
+
+
 
 
 \begin{frame}
