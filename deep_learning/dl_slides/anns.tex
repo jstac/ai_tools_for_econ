@@ -44,8 +44,6 @@
         \vspace{0.5em}
         \item 1950s: \brown{Rosenblatt} develops the perceptron (trainable NN)
         \vspace{0.5em}
-        \item 1960s-70s: Limited progress with single layer perceptrons
-        \vspace{0.5em}
         \item 1980s: Backpropagation algorithm enables training of MLPs
         \vspace{0.5em}
         \item 1990s: SVMs temporarily overshadow ANNs in popularity
@@ -396,6 +394,83 @@ for j in range(n):
     \end{figure}
 
 \end{frame}
+
+
+\begin{frame}{Universal function approximation I}
+
+    \textbf{Theorem}. (Cybenko--Hornik) Let 
+    %
+    \begin{itemize}
+        \item $K \subset \RR^n$ be compact, 
+        \item $f$ be a continuous functions from $K$ to $\RR^m$, and
+        \item $\sigma$ be a continuous map from $\RR$ to itself
+    \end{itemize}
+
+    If $\sigma$ is not polynomial, then, for every $\varepsilon > 0$, 
+    there exist matrices $A, C$ and vector $b$  such that
+    %
+    \begin{equation*}
+        \sup_{x \in K} \left| f(x) - C \sigma(A x + b) \right| 
+        < \varepsilon
+    \end{equation*}
+    %
+
+    \medskip
+    (The function $\sigma$ is applied component-wise) 
+
+\end{frame}
+
+
+\begin{frame}{Universal function approximation II}
+
+    Recall that the ReLU activation has the form $\sigma(x) = \max\{x, 0 \}$
+
+    \medskip
+    \medskip
+
+    \textbf{Theorem}. Let 
+    %
+    \begin{itemize}
+        \item $f \colon \RR^n \to \RR^m$ be Borel measurable and
+        \item $d = \max\{n+1,m\}$
+    \end{itemize}
+
+    \medskip
+    If $f$ is Bochner–Lebesgue integrable, then, for any $\varepsilon > 0$,
+    there exists a fully connected ReLU network $g$ of width $d$ 
+    satisfying 
+    %
+    \begin{equation*}
+        \int_{\RR^n} |f(x) - g(x)| \diff x < \varepsilon
+    \end{equation*}
+    %
+
+\end{frame}
+
+
+\begin{frame}
+    
+    Before we get too excited: many function classes have the universal function
+    approximation property
+
+            \vspace{0.4em}
+    \begin{itemize}
+        \item \brown{polynomials} in the set of continuous functions on compacts 
+            \vspace{0.4em}
+        \item any \brown{complete orthonormal basis} in a Hilbert space
+            \vspace{0.4em}
+        \item \brown{SVMs} with RBF kernels in reproducing kernel Hilbert space
+            \vspace{0.4em}
+        \item \brown{Gaussian processes} with RBF kernels in the set of continuous
+            functions on compacts
+            \vspace{0.4em}
+        \item \brown{random forests}
+            \vspace{0.4em}
+        \item etc.
+    \end{itemize}
+
+\end{frame}
+
 
 
 \begin{frame}{Training}
@@ -769,34 +844,36 @@ for j in range(n):
 
 \end{frame}
 
-\begin{frame}{Alternative story (me)}
+\begin{frame}{Alternative story}
 
 
     \begin{itemize}
-        \item A highly flexible function fitting technique 
-        \vspace{0.5em}
         \item Easy to understand with limited maths background
         \vspace{0.5em}
-        \item Extends naturally to high dimensions 
+        \item Scales well to high dimensions 
         \vspace{0.5em}
         \item Can exploit low-dimensional structure
         \vspace{0.5em}
         \item Function evaluations are highly parallelizable
         \vspace{0.5em}
-        \item Smooth recursive structure suited to calculating gradients
+        \item Flexible -- can inject inductive biases
         \vspace{0.5em}
-        \item Has received \underline{massive} investment from the CS community
-            \begin{itemize}
-                \vspace{0.5em}
-                \item algos, software, hardware
-            \end{itemize}
+        \item Smooth recursive structure suited to calculating gradients
     \end{itemize}
 
 \end{frame}
 
 \begin{frame}
+
+    On top of (because of) this:
     
+        \vspace{0.5em}
     \begin{itemize}
+        \item Has received \underline{massive} investment from the CS community
+            \begin{itemize}
+                \vspace{0.5em}
+                \item algos, software, hardware
+            \end{itemize}
         \vspace{0.5em}
         \item Many incremental improvements to improve regularization and training
         \vspace{0.5em}
