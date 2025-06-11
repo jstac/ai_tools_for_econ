@@ -1,5 +1,6 @@
 \input{../../preamble}
 
+
 \title{Artificial Neural Networks}
 
 \author{John Stachurski}
@@ -20,13 +21,9 @@
     \frametitle{Topics}
 
     \begin{itemize}
-        \item History
+        \item What are artificial neural networks?
         \vspace{0.5em}
-        \item Computational graphs
-        \vspace{0.5em}
-        \item Feedforward neural networks
-        \vspace{0.5em}
-        \item Gradient descent
+        \item How are they trained on data?
         \vspace{0.5em}
         \item Why is DL so successful?
         \vspace{0.5em}
@@ -34,6 +31,30 @@
 
 \end{frame}
 
+
+\begin{frame}
+    
+    \brown{Artificial neural networks (ANNs)} are the core of deep learning
+
+        \vspace{0.5em}
+    ``Deep learning'' means training ANNs with several hidden layers
+
+        \vspace{0.5em}
+    Major successes:
+    %
+    \begin{itemize}
+        \item Natural language processing
+        \vspace{0.3em}
+        \item Image recognition
+        \vspace{0.3em}
+        \item Speech recognition
+        \vspace{0.3em}
+        \item Games
+        \vspace{0.3em}
+        \item LLMs
+    \end{itemize}
+
+\end{frame}
 
 \begin{frame}
 
@@ -53,7 +74,7 @@
     
         \vspace{0.5em}
         \vspace{0.5em}
-    \emp{Last 10 years:} Explosion of progress in deep learning 
+    \emp{Last 10 years:} Explosion of progress in DL
 
     \begin{itemize}
         \item CNNs, RNNs, LSTMs, transformers, LLMs, etc.
@@ -139,7 +160,7 @@
 
         
         \node[anchor=south east, font=\Large] at (10.5, -0.3)
-            {$y_j = \sum_i w_{ij} x_i$};
+            {$y_j = \sum_i  x_i w_{ij}$};
 
         % Connections with weights
         \draw[strong pos] (N1) -- node[label, above, sloped] {$w_{1j} = 0.85$} (N4);
@@ -185,8 +206,8 @@
     \draw[weak neg] (N3) -- node[label, below, sloped, pos=0.3] {$w_{31}$} (N5);
 
     % Text in bottom right
-    \node[anchor=south east, font=\normalsize] at (10, 1.5) {$y_1 = \sum_i w_{i1} x_i$};
-    \node[anchor=south east, font=\normalsize] at (10,-1.5) {$y_2 = \sum_i w_{i2} x_i$};
+    \node[anchor=south east, font=\normalsize] at (10, 1.5) {$y_1 = \sum_i  x_i w_{i1}$};
+    \node[anchor=south east, font=\normalsize] at (10,-1.5) {$y_2 = \sum_i  x_i w_{i2}$};
     \node[anchor=south east, font=\Large] at (10,-3.5) {$\implies y = x W$};
 
 \end{tikzpicture}
@@ -196,7 +217,7 @@
 
 \begin{frame}
     
-    Note that we are using \emp{row vectors}:  $y = x W$
+    Note that we are using row vectors:  $y = x W$
 
         \vspace{0.5em}
         \vspace{0.5em}
@@ -205,144 +226,223 @@
     \begin{itemize}
         \item $w_{ij}$ points from $i$ to $j$
         \vspace{0.5em}
-        \item hence $y_j = \sum_i w_{ij} x_i$
+        \item hence $y_j = \sum_i x_i w_{ij} $  (total flow of activation to node $j$)
         \vspace{0.5em}
         \item hence $y = x W$
     \end{itemize}
 
         \vspace{0.5em}
-    But it also has another advantage \ldots?
-
-
-\end{frame}
-
-
-\begin{frame}
-    
-    % Required packages for the diagram
-% Add these to your preamble if not already included
-% \usepackage{tikz}
-% \usetikzlibrary{arrows.meta, positioning, calc, backgrounds}
-% \usepackage{xcolor}
-
-% Row-major vs Column-major storage diagram
-  \begin{tikzpicture}[scale=0.9, transform shape]
-    % Define styles
-    \tikzset{
-        cell/.style={
-            rectangle, 
-            minimum size=1cm, 
-            draw=black,
-            thick,
-            anchor=center
-        },
-        memory cell/.style={
-            rectangle,
-            minimum width=1cm,
-            minimum height=1cm,
-            draw=black,
-            thick,
-            anchor=center
-        },
-        arrow style/.style={-{Stealth[scale=1.5]}, thick},
-        label style/.style={font=\small\bfseries}
-    }
-    
-    % Row-major memory layout
-    \begin{scope}[shift={(0,0)}]
-        % 4 CELLS FOR 2x2 MATRIX
-        \node[memory cell] (m0) at (0*1.2,0) {$W_{11}$};
-        \node[memory cell] (m1) at (1*1.2,0) {$W_{12}$};
-        \node[memory cell] (m2) at (2*1.2,0) {$W_{21}$};
-        \node[memory cell] (m3) at (3*1.2,0) {$W_{22}$};
-        
-        % Highlight rows in row-major
-        \begin{scope}[on background layer]
-            \fill[red!10] ($(m0) + (-0.6,-0.6)$) rectangle ($(m1) + (0.6,0.6)$);
-            \fill[blue!10] ($(m2) + (-0.6,-0.6)$) rectangle ($(m3) + (0.6,0.6)$);
-        \end{scope}
-        
-        % Label to the right
-        \node[right=0.8cm of m3, font=\large\bfseries] {row-major storage};
-    \end{scope}
-    
-    % Matrix definition - POSITIONED IN THE MIDDLE and using manual positioning
-    \begin{scope}[shift={(0,-3.5)}]
-        % Create matrix W manually without the matrix library
-        \node[cell] (W11) at (0,0) {$W_{11}$};
-        \node[cell] (W12) at (1,0) {$W_{12}$};
-        \node[cell] (W21) at (0,-1) {$W_{21}$};
-        \node[cell] (W22) at (1,-1) {$W_{22}$};
-    \end{scope}
-    
-    % Column-major memory layout
-    \begin{scope}[shift={(0,-7)}]
-        % 4 CELLS FOR 2x2 MATRIX
-        \node[memory cell] (c0) at (0*1.2,0) {$W_{11}$};
-        \node[memory cell] (c1) at (1*1.2,0) {$W_{21}$};
-        \node[memory cell] (c2) at (2*1.2,0) {$W_{12}$};
-        \node[memory cell] (c3) at (3*1.2,0) {$W_{22}$};
-        
-        % Highlight columns in column-major
-        \begin{scope}[on background layer]
-            \fill[red!10] ($(c0) + (-0.6,-0.6)$) rectangle ($(c1) + (0.6,0.6)$);
-            \fill[blue!10] ($(c2) + (-0.6,-0.6)$) rectangle ($(c3) + (0.6,0.6)$);
-        \end{scope}
-        
-        % Label to the right
-        \node[right=0.8cm of c3, font=\large\bfseries] {column-major storage};
-    \end{scope}
-    
-    % Draw arrows from matrix to row-major memory layout
-    \draw[arrow style, red!60] (W11.north) to[out=90, in=270] (m0.south);
-    \draw[arrow style, red!60] (W12.north) to[out=90, in=270] (m1.south);
-    \draw[arrow style, blue!60] (W21.north) to[out=90, in=270] (m2.south);
-    \draw[arrow style, blue!60] (W22.north) to[out=90, in=270] (m3.south);
-    
-    % Draw arrows from matrix to column-major memory layout
-    \draw[arrow style, red!60, dashed] (W11.south) to[out=270, in=90] (c0.north);
-    \draw[arrow style, red!60, dashed] (W21.south) to[out=270, in=90] (c1.north);
-    \draw[arrow style, blue!60, dashed] (W12.south) to[out=270, in=90] (c2.north);
-    \draw[arrow style, blue!60, dashed] (W22.south) to[out=270, in=90] (c3.north);
-    
-  \end{tikzpicture}
-
-\end{frame}
-
-
-\begin{frame}[fragile]
-
-Computing $xW$ 
-    
-    \begin{minted}{python}
-for i in range(n):     
-    for j in range(m):
-        # Access row elements of W contiguously
-        y[j] += W[i, j] * x[i] 
-    \end{minted}
-
-
         \vspace{0.5em}
         \vspace{0.5em}
-Computing $Wx$
-
-    \begin{minted}{python}
-for j in range(n):   
-    for i in range(m):
-        # Non-contiguous access of W
-        y[i] += W[i, j] * x[j]        
-    \end{minted}
+    Also fine to use column vectors --- just transpose $W$
 
 \end{frame}
+
+% \begin{frame}
+%     
+%   \begin{tikzpicture}[scale=0.9, transform shape]
+%     \tikzset{
+%         cell/.style={
+%             rectangle, 
+%             minimum size=1cm, 
+%             draw=black,
+%             thick,
+%             anchor=center
+%         },
+%         memory cell/.style={
+%             rectangle,
+%             minimum width=1cm,
+%             minimum height=1cm,
+%             draw=black,
+%             thick,
+%             anchor=center
+%         },
+%         arrow style/.style={-{Stealth[scale=1.5]}, thick},
+%         label style/.style={font=\small\bfseries}
+%     }
+%     
+%     % Row-major memory layout
+%     \begin{scope}[shift={(0,0)}]
+%         % 4 CELLS FOR 2x2 MATRIX
+%         \node[memory cell] (m0) at (0*1.2,0) {$W_{11}$};
+%         \node[memory cell] (m1) at (1*1.2,0) {$W_{12}$};
+%         \node[memory cell] (m2) at (2*1.2,0) {$W_{21}$};
+%         \node[memory cell] (m3) at (3*1.2,0) {$W_{22}$};
+%         
+%         % Highlight rows in row-major
+%         \begin{scope}[on background layer]
+%             \fill[red!10] ($(m0) + (-0.6,-0.6)$) rectangle ($(m1) + (0.6,0.6)$);
+%             \fill[blue!10] ($(m2) + (-0.6,-0.6)$) rectangle ($(m3) + (0.6,0.6)$);
+%         \end{scope}
+%         
+%         % Label to the right
+%         \node[right=0.8cm of m3, font=\large\bfseries] {row-major storage};
+%     \end{scope}
+%     
+%     % Matrix definition - POSITIONED IN THE MIDDLE and using manual positioning
+%     \begin{scope}[shift={(0,-3.5)}]
+%         % Create matrix W manually without the matrix library
+%         \node[cell] (W11) at (0,0) {$W_{11}$};
+%         \node[cell] (W12) at (1,0) {$W_{12}$};
+%         \node[cell] (W21) at (0,-1) {$W_{21}$};
+%         \node[cell] (W22) at (1,-1) {$W_{22}$};
+%     \end{scope}
+%     
+%     % Column-major memory layout
+%     \begin{scope}[shift={(0,-7)}]
+%         % 4 CELLS FOR 2x2 MATRIX
+%         \node[memory cell] (c0) at (0*1.2,0) {$W_{11}$};
+%         \node[memory cell] (c1) at (1*1.2,0) {$W_{21}$};
+%         \node[memory cell] (c2) at (2*1.2,0) {$W_{12}$};
+%         \node[memory cell] (c3) at (3*1.2,0) {$W_{22}$};
+%         
+%         % Highlight columns in column-major
+%         \begin{scope}[on background layer]
+%             \fill[red!10] ($(c0) + (-0.6,-0.6)$) rectangle ($(c1) + (0.6,0.6)$);
+%             \fill[blue!10] ($(c2) + (-0.6,-0.6)$) rectangle ($(c3) + (0.6,0.6)$);
+%         \end{scope}
+%         
+%         % Label to the right
+%         \node[right=0.8cm of c3, font=\large\bfseries] {column-major storage};
+%     \end{scope}
+%     
+%     % Draw arrows from matrix to row-major memory layout
+%     \draw[arrow style, red!60] (W11.north) to[out=90, in=270] (m0.south);
+%     \draw[arrow style, red!60] (W12.north) to[out=90, in=270] (m1.south);
+%     \draw[arrow style, blue!60] (W21.north) to[out=90, in=270] (m2.south);
+%     \draw[arrow style, blue!60] (W22.north) to[out=90, in=270] (m3.south);
+%     
+%     % Draw arrows from matrix to column-major memory layout
+%     % \draw[arrow style, red!60, dashed] (W11.south) to[out=270, in=90] (c0.north);
+%     % \draw[arrow style, red!60, dashed] (W21.south) to[out=270, in=90] (c1.north);
+%     % \draw[arrow style, blue!60, dashed] (W12.south) to[out=270, in=90] (c2.north);
+%     % \draw[arrow style, blue!60, dashed] (W22.south) to[out=270, in=90] (c3.north);
+%     
+%   \end{tikzpicture}
+%
+% \end{frame}
+%
+% \begin{frame}
+%     
+%   \begin{tikzpicture}[scale=0.9, transform shape]
+%     % Define styles
+%     \tikzset{
+%         cell/.style={
+%             rectangle, 
+%             minimum size=1cm, 
+%             draw=black,
+%             thick,
+%             anchor=center
+%         },
+%         memory cell/.style={
+%             rectangle,
+%             minimum width=1cm,
+%             minimum height=1cm,
+%             draw=black,
+%             thick,
+%             anchor=center
+%         },
+%         arrow style/.style={-{Stealth[scale=1.5]}, thick},
+%         label style/.style={font=\small\bfseries}
+%     }
+%     
+%     % Row-major memory layout
+%     \begin{scope}[shift={(0,0)}]
+%         % 4 CELLS FOR 2x2 MATRIX
+%         \node[memory cell] (m0) at (0*1.2,0) {$W_{11}$};
+%         \node[memory cell] (m1) at (1*1.2,0) {$W_{12}$};
+%         \node[memory cell] (m2) at (2*1.2,0) {$W_{21}$};
+%         \node[memory cell] (m3) at (3*1.2,0) {$W_{22}$};
+%         
+%         % Highlight rows in row-major
+%         \begin{scope}[on background layer]
+%             \fill[red!10] ($(m0) + (-0.6,-0.6)$) rectangle ($(m1) + (0.6,0.6)$);
+%             \fill[blue!10] ($(m2) + (-0.6,-0.6)$) rectangle ($(m3) + (0.6,0.6)$);
+%         \end{scope}
+%         
+%         % Label to the right
+%         \node[right=0.8cm of m3, font=\large\bfseries] {row-major storage};
+%     \end{scope}
+%     
+%     % Matrix definition - POSITIONED IN THE MIDDLE and using manual positioning
+%     \begin{scope}[shift={(0,-3.5)}]
+%         % Create matrix W manually without the matrix library
+%         \node[cell] (W11) at (0,0) {$W_{11}$};
+%         \node[cell] (W12) at (1,0) {$W_{12}$};
+%         \node[cell] (W21) at (0,-1) {$W_{21}$};
+%         \node[cell] (W22) at (1,-1) {$W_{22}$};
+%     \end{scope}
+%     
+%     % Column-major memory layout
+%     \begin{scope}[shift={(0,-7)}]
+%         % 4 CELLS FOR 2x2 MATRIX
+%         \node[memory cell] (c0) at (0*1.2,0) {$W_{11}$};
+%         \node[memory cell] (c1) at (1*1.2,0) {$W_{21}$};
+%         \node[memory cell] (c2) at (2*1.2,0) {$W_{12}$};
+%         \node[memory cell] (c3) at (3*1.2,0) {$W_{22}$};
+%         
+%         % Highlight columns in column-major
+%         \begin{scope}[on background layer]
+%             \fill[red!10] ($(c0) + (-0.6,-0.6)$) rectangle ($(c1) + (0.6,0.6)$);
+%             \fill[blue!10] ($(c2) + (-0.6,-0.6)$) rectangle ($(c3) + (0.6,0.6)$);
+%         \end{scope}
+%         
+%         % Label to the right
+%         \node[right=0.8cm of c3, font=\large\bfseries] {column-major storage};
+%     \end{scope}
+%     
+%     % Draw arrows from matrix to row-major memory layout
+%     % \draw[arrow style, red!60] (W11.north) to[out=90, in=270] (m0.south);
+%     % \draw[arrow style, red!60] (W12.north) to[out=90, in=270] (m1.south);
+%     % \draw[arrow style, blue!60] (W21.north) to[out=90, in=270] (m2.south);
+%     % \draw[arrow style, blue!60] (W22.north) to[out=90, in=270] (m3.south);
+%     
+%     % Draw arrows from matrix to column-major memory layout
+%     \draw[arrow style, red!60, dashed] (W11.south) to[out=270, in=90] (c0.north);
+%     \draw[arrow style, red!60, dashed] (W21.south) to[out=270, in=90] (c1.north);
+%     \draw[arrow style, blue!60, dashed] (W12.south) to[out=270, in=90] (c2.north);
+%     \draw[arrow style, blue!60, dashed] (W22.south) to[out=270, in=90] (c3.north);
+%     
+%   \end{tikzpicture}
+%
+% \end{frame}
+%
+%
+% \begin{frame}[fragile]
+%
+% Computing $y = xW$ 
+%     
+%     \begin{minted}{python}
+% for i in range(n):     
+%     for j in range(m):
+%         # Access row elements of W contiguously
+%         y[j] += W[i, j] * x[i] 
+%     \end{minted}
+%
+%
+%         \vspace{0.5em}
+%         \vspace{0.5em}
+% Computing $y = Wx$
+%
+%     \begin{minted}{python}
+% for j in range(n):   
+%     for i in range(m):
+%         # Non-contiguous access of W
+%         y[i] += W[i, j] * x[j]        
+%     \end{minted}
+%
+% \end{frame}
+%
 
 \begin{frame}{Next steps}
 
         \vspace{0.5em}
         \vspace{0.5em}
-    After computing $y_j = \sum_i w_{ij} x_i$ we 
+    After computing $y_j = \sum_i x_i w_{ij}$ we 
     %
     \begin{enumerate}
         \item add a bias term $b_j$ and
+        \vspace{0.5em}
         \item apply a nonlinear ``activation function'' $\sigma \colon \RR \to \RR$
     \end{enumerate}
     
@@ -364,17 +464,17 @@ for j in range(n):
     First add bias:
 
     \begin{equation*}
-        y_j = \sum_i w_{ij} x_i       
+        y_j = \sum_i x_i w_{ij}        
         \qquad \to \qquad
-        y_j = \sum_i w_{ij} x_i + b_j
+        y_j = \sum_i  x_i w_{ij} + b_j
     \end{equation*}
 
     Then apply activation:
     %
     \begin{equation*}
-        y_j = \sum_i w_{ij} x_i + b_j
+        y_j = \sum_i x_i w_{ij} + b_j
         \qquad \to \qquad
-        y_j = \sigma \left(\sum_i w_{ij} x_i + b_j \right)
+        y_j = \sigma \left(\sum_i x_i w_{ij} + b_j \right)
     \end{equation*}
 
     Applying $\sigma$ pointwise, we can write this in vector form as
@@ -398,7 +498,7 @@ for j in range(n):
 
 \begin{frame}{Universal function approximation I}
 
-    \textbf{Theorem}. (Cybenko--Hornik) Let 
+    \textbf{Theorem}. (Cybenko--Hornik 1989, 1991) Let 
     %
     \begin{itemize}
         \item $K \subset \RR^n$ be compact, 
@@ -410,7 +510,7 @@ for j in range(n):
     there exist matrices $A, C$ and vector $b$  such that
     %
     \begin{equation*}
-        \sup_{x \in K} \left| f(x) - C \sigma(A x + b) \right| 
+        \sup_{x \in K} \left\| f(x) - C \sigma(A x + b) \right\| 
         < \varepsilon
     \end{equation*}
     %
@@ -441,7 +541,7 @@ for j in range(n):
     satisfying 
     %
     \begin{equation*}
-        \int_{\RR^n} |f(x) - g(x)| \diff x < \varepsilon
+        \int \|f(x) - g(x)\| \diff x < \varepsilon
     \end{equation*}
     %
 
@@ -455,14 +555,13 @@ for j in range(n):
 
             \vspace{0.4em}
     \begin{itemize}
-        \item \brown{polynomials} in the set of continuous functions on compacts 
+        \item \brown{polynomials} in $C_0(K) :=$ continuous functions on compacts 
             \vspace{0.4em}
-        \item any \brown{complete orthonormal basis} in a Hilbert space
+        \item finite linear combinations of an \brown{ONS} in a Hilbert space
             \vspace{0.4em}
         \item \brown{SVMs} with RBF kernels in reproducing kernel Hilbert space
             \vspace{0.4em}
-        \item \brown{Gaussian processes} with RBF kernels in the set of continuous
-            functions on compacts
+        \item \brown{Gaussian processes} with RBF kernels in $C_0(K)$
             \vspace{0.4em}
         \item \brown{random forests}
             \vspace{0.4em}
@@ -537,7 +636,7 @@ for j in range(n):
     where
     %
     \begin{itemize}
-        \item $G_{\ell} x = \sigma_\ell(x W_\ell + b_\ell)$ 
+        \item $G_{\ell} (x) = \sigma_\ell(x W_\ell + b_\ell)$ 
         \vspace{0.5em}
         \item $\sigma_\ell$ is an activation function
     \end{itemize}
@@ -561,27 +660,26 @@ for j in range(n):
 
 \begin{frame}{Gradient descent}
 
-    Algorithm:
+    Algorithm: Implement $\nabla \ell$ and then update guess $\theta_k$ via
     
     \begin{equation*}
-        \theta_{\rm{next}} = \theta - \lambda \, \nabla_\theta \ell(\theta, x, y)
+        \theta_{k+1} = \theta_k - \lambda_k \cdot \nabla \ell(\theta_k)
     \end{equation*}
 
     \begin{itemize}
         \item take a step in the opposite direction to the grad vector
         \vspace{0.5em}
-        \item $\lambda$ is the \emp{learning rate} -- often changes at each step
+        \item $\lambda_k$ is the \emp{learning rate} 
         \vspace{0.5em}
         \item iterate until hit a stopping condition
         \vspace{0.5em}
-        \item in practice replace $\ell(\theta)$ with batched loss
+        \item in practice replace $\ell(\theta)$ with batched loss $\to$ \emp{SGD}
             %
             \begin{equation*}
                 \frac{1}{|B|}\sum_{i \in B} (y_i - f_\theta(x_i))^2
             \end{equation*}
     \end{itemize}
 
-    Using batches $\to$ \emp{stochastic gradient descent}
 
 \end{frame}
 
@@ -590,6 +688,8 @@ for j in range(n):
 
 
     \begin{itemize}
+        \item Many variations on SGD
+        \vspace{0.5em}
         \item Loss functions with regularization
         \vspace{0.5em}
         \item Cross-entropy loss (classification)
@@ -641,34 +741,33 @@ for j in range(n):
         grid style={line width=.1pt, draw=gray!10},
         major grid style={line width=.2pt,draw=gray!50},
         every axis plot/.append style={thick},
-        title={Overfitting and underfitting},
         title style={font=\large},
         domain=0:10,
         smooth,
     ]
 
     % Training error curve (monotonically decreasing)
-    \addplot[color=blue, line width=2pt, name path=training] {0.9*exp(-0.35*x) + 0.1};
+    \addplot[color=blue, line width=2pt, name path=training] {0.9*exp(-0.35*x) + 0.0};
 
     % Test error curve (U-shaped)
-    \addplot[color=red, line width=2pt, name path=test] {0.4*exp(-0.7*x) + 0.15*exp(0.35*(x-5)) + 0.12};
+    \addplot[color=red, line width=2pt, name path=test] {0.4*exp(-0.7*x) + 0.15*exp(0.35*(x-5)) + 0.42};
 
     % curve labels
     \node[color=blue, font=\small\bfseries] at (8,0.25) {training loss};
-    \node[color=red, font=\small\bfseries] at (7,0.65) {test loss};
+    \node[color=red, font=\small\bfseries] at (7,0.55) {test loss};
 
     % Underfitting and overfitting regions
     \draw[<->, >=stealth, gray, line width=1pt] (3.2,0.8) -- (0.2,0.8);
     \node[align=center, gray, font=\small\bfseries] at (1.9, 0.9) {underfitting};
 
-    \draw[<->, >=stealth, gray, line width=1pt] (6.3,0.8) -- (9.8,0.8);
-    \node[align=center, gray, font=\small\bfseries] at (8, 0.9) {overfitting};
+    \draw[<->, >=stealth, gray, line width=1pt] (4.3,0.8) -- (9.8,0.8);
+    \node[align=center, gray, font=\small\bfseries] at (6, 0.9) {overfitting};
 
     % Fill regions
-    \path[name path=axis] (axis cs:0,0) -- (axis cs:10,0);
-    \addplot[blue!10, opacity=0.5] fill between[of=axis and training, soft clip={domain=0:3.2}];
-    \addplot[red!10, opacity=0.5] fill between[of=axis and test, soft clip={domain=3.2:10}];
-
+    % \path[name path=axis] (axis cs:0,0) -- (axis cs:10,0);
+    % \addplot[blue!10, opacity=0.5] fill between[of=axis and training, soft clip={domain=0:3.2}];
+    % \addplot[red!10, opacity=0.5] fill between[of=axis and test, soft clip={domain=3.2:10}];
+    %
     \end{axis}
 
     \end{tikzpicture}
@@ -684,11 +783,11 @@ for j in range(n):
         \vspace{0.5em}
         \vspace{0.5em}
 
-    \textbf{Answer 1} Data sets are large and complex -- need complex model
+    \emp{Answer 1} Underlying relationships are complex -- need complex model
 
         \vspace{0.5em}
         \vspace{0.5em}
-    \textbf{Answer 2} Engineers avoid using full complexity of the model
+    \emp{Answer 2} Engineers avoid using full complexity of the model
 
     \begin{itemize}
         \item Early stopping halts training when test loss starts to rise
@@ -716,6 +815,7 @@ for j in range(n):
 
     Randomness ``adds some smoothing'' to a given data set
 
+        \vspace{0.5em}
     ``The model must learn to be robust to these perturbations, which encourages
     it to find smoother, more generalizable decision boundaries rather than
     fitting to noise in the training data.'' 
@@ -727,19 +827,25 @@ for j in range(n):
 
 \begin{frame}
     
-    \textbf{Answer 4} Modern architectures have inductive biases that guide
-    learning toward useful patterns
+    \textbf{Answer 4} Modern architectures have inductive biases 
+
+            \vspace{0.5em}
+            \vspace{0.5em}
+
+    \Egs
 
     \begin{itemize}
-        \item translation invariance in CNNs (same pattern can be
-            recognized anywhere in an image)
-        \item localization in CNNs -- pixels are influenced more by neighbors
-            than pixels far away
-        \item parameter sharing in RNNs -- similarity of transformations across
+        \item Translation invariance in CNNs 
+            \vspace{0.5em}
+        \item Localization in CNNs -- pixels influenced more by neighbor pixels 
+            \vspace{0.5em}
+        \item Parameter sharing in RNNs -- similarity of transformations across
             time
-        \item Layer normalization and residual connections in transformers -
-            create a bias toward stable training dynamics and information preservation across layers.
     \end{itemize}
+
+            \vspace{0.5em}
+
+    \brown{Injection of good priors guides learning}
     
 \end{frame}
 
@@ -824,14 +930,14 @@ for j in range(n):
 
 \begin{frame}{Summary}
     
-    Why can deep learning successfully generalize from limited observations?
+    Why can DL successfully generalize?
 
 \end{frame}
 
 
-\begin{frame}{Computer scientists' story}
+\begin{frame}{CS story}
 
-    Good because 
+    Because 
 
     \begin{itemize}
         \item based on a model of the human brain! 
@@ -888,8 +994,6 @@ for j in range(n):
         \vspace{0.5em}
         \item Scales well to high dimensions 
         \vspace{0.5em}
-        \item Can exploit low-dimensional structure
-        \vspace{0.5em}
         \item Function evaluations are highly parallelizable
         \vspace{0.5em}
         \item Flexible -- can inject inductive biases
@@ -906,15 +1010,30 @@ for j in range(n):
         \vspace{0.5em}
     \begin{itemize}
         \item Has received massive investment from the CS community
+            %
             \begin{itemize}
-                \vspace{0.5em}
-                \item algos, software, hardware
+                \vspace{0.3em}
+                \item algos
+                \vspace{0.3em}
+                \item software
+                \vspace{0.3em}
+                \item hardware
             \end{itemize}
+            %
         \vspace{0.5em}
-        \item Many incremental improvements to improve regularization and training
+        \item Many incremental improvements to improve regularization 
         \vspace{0.5em}
-        \item Many incremental improvements to inject domain-specific knowledge
-            (CNNs, transformers, etc.)
+        \item Steady increase in injection of domain-specific knowledge
+            %
+            \begin{itemize}
+                \vspace{0.3em}
+                \item CNNs
+                \vspace{0.3em}
+                \item RNNs
+                \vspace{0.3em}
+                \item transformers, etc.
+            \end{itemize}
+            %
     \end{itemize}
 
 \end{frame}
