@@ -95,7 +95,7 @@ class Config:
 
     """
     seed = 42
-    epochs = 100
+    epochs = 200
     n_paths = 1_000
     path_length = 1_000
     layer_sizes = 1, 8, 8, 1
