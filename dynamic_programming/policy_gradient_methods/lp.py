@@ -2,20 +2,19 @@
 We consider a version of the Long-Plosser multisector optimal growth model with
 Bellman equation
 
-    v(y) = max_{l, X, c} { u(c, z) + β E v(f(l, X, λ)) }
+    v(y) = max_{X, c} { u(c) + β E v(f(X, λ)) }
 
 subject to
 
     c_j + Σ_i X_{ij} = y_j,
-    Σ_i l_i = 1.0
-    [f(l, X, λ)]_i = λ_i l_i^{b_i} Π_j X_{ij}^{a_{ij}}
+    y_j' = [f(X, λ)]_j = λ_j Π_i x_{ij}^{a_{ij}}
 
 Here
 
 * y is an N-vector of outputs 
 * λ is an N-vector of IID shocks 
 * c is an N-vector of consumption quantities
-* X is an NxN matrix of inputs, with X_{ij} the quantity of commodity j used to produce commodity i
+* X is an NxN matrix of inputs, with X_{ij} the quantity of commodity i used to produce commodity j
 * u(c) = Σ_i θ_i ln c_i
 
 """
@@ -47,10 +46,10 @@ def u(model, c, z):
     return jnp.dot(θ, jnp.log(c))
 
 
-def f(model, l, X, λ):
+def f(model, X, λ):
     "Production function"
     θ, b, A, β = model
-    return λ * l**b * jnp.prod(X**A, axis=1)
+    return λ * jnp.prod(X**A, axis=1)
 
 
 def v_star(model, y):
