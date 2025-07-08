@@ -95,7 +95,7 @@ class Config:
 
     """
     seed = 42
-    epochs = 200
+    epochs = 100
     n_paths = 1_000
     path_length = 1_000
     layer_sizes = 1, 8, 8, 1
@@ -150,6 +150,7 @@ def initialize_network(key, layer_sizes):
 # We create a function to run a forward pass through the network, mapping parameters and an input `y` to a corresponding consumption rate.
 
 # %%
+@jax.jit
 def forward(params, y):
     """
     Evaluate neural network policy: maps income consumption rate c/y
@@ -323,7 +324,7 @@ for i in range(epochs):
     # Store history
     value_history.append(lifetime_value)
     
-    if i % 100 == 0:
+    if i % 10 == 0:
         print(f"Iteration {i}: Value = {lifetime_value:.4f}")
 
 # %% [markdown]
