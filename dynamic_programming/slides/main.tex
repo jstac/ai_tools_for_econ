@@ -27,12 +27,11 @@
         \item DP algorithms 
     \end{itemize}
 
-\end{frame}
-
-\begin{frame}
+    \medskip
+    \medskip
     
     The focus of this lecture will be on 
-
+    %
     \begin{enumerate}
         \item core theory
         \item core algorithms and 
@@ -52,8 +51,10 @@
         \item finite state space $\Xsf$
     \end{itemize}
 
-    On the other hand, we will allow many interesting features
+    \medskip
 
+    On the other hand, we will allow many interesting features
+    %
     \begin{itemize}
         \item Epstein-Zin preferences
         \item state-dependent discounting
@@ -74,11 +75,16 @@
         \qquad (x \in \Xsf)
     \end{equation*}
 
-    Here $K$ and $b$ are given, while $v$ is the unknown
+            \medskip
+    Here 
 
-    We think of $v$ is a function from finite set $\Xsf$ to $\RR$
-    
-    Our objective is to solve the equation for $v$
+    \begin{itemize}
+        \item $K$ and $b$ are given, while $v$ is the unknown
+            \medskip
+        \item $v$ maps finite set $\Xsf$ to $\RR$  (we write $v \in \RR^\Xsf$)
+            \medskip
+        \item Our objective is to solve the equation for $v$
+    \end{itemize}
 
 \end{frame}
 
@@ -113,7 +119,7 @@
     The spectral radius of $K$ is
     %
     \begin{equation*}
-        r(K) \coloneq \max \setntn{|\lambda|}{\lambda \text{ is an eigenvalue of } K}
+        \rho(K) \coloneq \max \setntn{|\lambda|}{\lambda \text{ is an eigenvalue of } K}
     \end{equation*}
 
     \medskip
@@ -134,7 +140,16 @@ def spectral_radius(K):
 
 \begin{frame}
 
-   \Thm If $r(K) < 1$, then 
+   The next result is the matrix analogue of 
+   %
+   \begin{equation*}
+       |a| < 1
+       \quad \implies \quad
+       \sum_{i \geq 0} a^i = \frac{1}{1-a}
+   \end{equation*}
+
+
+   \Thm If $\rho(K) < 1$, then 
    %
    \begin{enumerate}
        \item $I-K$ is invertible with
@@ -156,21 +171,66 @@ def spectral_radius(K):
    \medskip
 
 
-   \textbf{Remark.} This is the matrix analogue of 
-   %
-   \begin{equation*}
-       |a| < 1
-       \quad \implies \quad
-       \sum_{i \geq 0} a^i = \frac{1}{1-a}
-   \end{equation*}
+
+\end{frame}
+
+\begin{frame}{Prelude: Markov chains}
+
+    Let
+    %
+    \begin{itemize}
+        \item $\Xsf$ be a finite set, as before
+            \medskip
+        \item $(X_t)$ be a stochastic process taking values in $\Xsf$
+            \medskip
+        \item $P$ be a stochastic matrix ($P \geq 0$ and $P \1 = \1$)
+    \end{itemize}
+    
+    \medskip
+    We say that $(X_t)$ is \navy{$P$-Markov} if
+    %
+    \begin{equation*}
+        \text{$\PP\{X_{t+1} = x' \given X_t = x\} = P(x, x')$}
+    \end{equation*}
+    %
+    for all $x, x' \in \Xsf$
 
 \end{frame}
 
 
+\begin{frame}[fragile]
+
+    {\small
+    
+    \begin{minted}{python}
+def generate_markov_chain(key, P, x_0, num_steps):
+    " Generate a P-Markov chain with initial condition x_0. "
+    n = P.shape[0]
+    chain = jnp.zeros(num_steps + 1, dtype=jnp.int32)
+    chain = chain.at[0].set(x_0)
+    
+    def update(t, carry):
+        key, chain = carry
+        key, subkey = random.split(key)
+        x = chain[t]
+        y = random.choice(subkey, n, p=P[x, :])
+        chain = chain.at[t + 1].set(y)
+        return (key, chain)
+    
+    final_key, final_chain = jax.lax.fori_loop(
+        0, num_steps, update, (key, chain)
+    )
+    return final_chain
+\end{minted}
+
+}
+
+\end{frame}
+
 
 \begin{frame}\frametitle{Introduction to DPs: the Affine Case}
 
-    Consider a dynamic program with
+    We consider dynamic programs operating on 
     %
     \begin{enumerate}
         \item a finite set $\Xsf$ called the \navy{state space} and
@@ -215,12 +275,46 @@ def spectral_radius(K):
         \right\}
     \end{equation*}
 
+    \medskip
     Components:
     %
     \begin{itemize}
         \item the \navy{reward function} $r$ maps $\Gsf$ to $\RR$ and
-        \item the \navy{transition kernel} $K$ maps $\Gsf \times \Xsf$ to $\RR$ 
+            \medskip
+        \item the \navy{transition kernel} $K$ maps $\Gsf \times \Xsf$ to $\RR_+$ 
     \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    What's the intiution behind the Bellman equation
+    %
+    \begin{equation*}
+        v(x)
+        = \max_{a \in \Gamma(x)}
+        \left\{
+            r(x, a)
+            + \sum_{x'} v(x') K(x, a, x')
+        \right\} 
+        \quad?
+    \end{equation*}
+
+    \medskip
+    Think of $v(x')$ as maximum lifetime reward from future state $x'$
+
+    The max trades off
+    %
+    \begin{enumerate}
+        \item current reward $r(x, a)$
+            \medskip
+        \item expected discounted future reward $\sum_{x'} v(x') K(x, a, x')$
+    \end{enumerate}
+
+    \medskip
+    \medskip
+
+    The result yields maximum lifetime reward $v(x)$
 
 \end{frame}
 
@@ -229,17 +323,13 @@ def spectral_radius(K):
     
     \Eg \navy{Job search}
 
+    \medskip
     Set up:
-        \vspace{0.5em}
+    %
     \begin{itemize}
         \item wage offer process $(W_t)_{t \geq 0}$ is $P$-Markov on finite set
-            $\Wsf$: 
+            $\Wsf$. 
         \vspace{0.5em}
-        %
-        \begin{equation*}
-            \text{$\PP\{W_{t+1} = w' \given W_t = w\} = P(w, w')$}
-        \end{equation*}
-        %
         \item discount factor $\beta \in (0,1)$
     \end{itemize}
 
@@ -253,6 +343,12 @@ def spectral_radius(K):
         \left\{
             \frac{w}{1-\beta} , \,   c + \beta \sum_{w'} v(w') P(w, w')
         \right\}
+    \end{equation*}
+
+    First choice is
+    %
+    \begin{equation*}
+        \frac{w}{1-\beta} = w + \beta w + \beta^2 w + \cdots
     \end{equation*}
 
 \end{frame}
@@ -542,6 +638,8 @@ def spectral_radius(K):
         \item reward function $r$ maps $\Gsf$ to $\RR$ 
         \medskip
         \item transition kernel $K$ maps $\Gsf \times \Xsf$ to $\RR$ 
+        \medskip
+        \item feasible correspondence $\Gamma$ is nonempty
     \end{itemize}
 
 \end{frame}
@@ -637,13 +735,6 @@ def spectral_radius(K):
 \end{frame}
 
 
-\begin{frame}
-    
-    Add an intuitive discussion for the recursion that defines $v_\sigma$ in the
-    MDP case
-
-\end{frame}
-
 
 \begin{frame}
     
@@ -655,13 +746,28 @@ def spectral_radius(K):
         \item $K_\sigma(x, x') := K(x, \sigma(x), x') =$ transitions under
             $\sigma$
     \end{itemize}
+
+    \medskip
+
+    Assume for now that $\rho(K_\sigma) < 1$ for all $\sigma$
+
+    \medskip
+    \medskip
         
 
     The \navy{lifetime value function} associated with policy $\sigma$ is 
     %
     \begin{equation*}
-        v_\sigma := (I - K_\sigma)^{-1} r_\sigma
+        v_\sigma 
+        := \sum_{t \geq 0} K_\sigma^t r_\sigma
+        = (I - K_\sigma)^{-1} r_\sigma
     \end{equation*}
+
+    
+\end{frame}
+
+
+\begin{frame}
 
     Note that
     %
@@ -673,8 +779,24 @@ def spectral_radius(K):
         \\
         & \iff  v = (I - K_\sigma)^{-1}r_\sigma =: v_\sigma
     \end{align*}
+
+    \medskip
     
+    Hence $v_\sigma$ satisfies
+    %
+    \begin{equation*}
+        v_\sigma(x) 
+            = r(x, \sigma(x))
+            + \sum_{x'} v_\sigma(x') K(x, \sigma(x), x')
+    \end{equation*}
+
+    \medskip
+
+    This is a natural recursion for the lifetime value of $\sigma$ 
+
 \end{frame}
+
+
 
 
 \begin{frame}
@@ -690,11 +812,6 @@ def spectral_radius(K):
     \vspace{0.4em}
     \vspace{0.4em}
 
-    Equivalently,
-    %
-    \begin{equation*}
-        v^* := \bigvee_\sigma v_\sigma
-    \end{equation*}
 
     \vspace{0.4em}
     \vspace{0.4em}
@@ -703,34 +820,37 @@ def spectral_radius(K):
     A policy $\sigma$ is called \navy{optimal} if $v_\sigma = v^*$
 
 
+    \begin{itemize}
+        \item $\sigma$ extracts maximum lifetime value from all states
+    \end{itemize}
+
 \end{frame}
 
 
 
 
 \begin{frame}
-    \frametitle{MDP Optimality}
+    \frametitle{Optimality}
 
-    \begin{block}{\vspace*{-3ex}}
-        {\bf Theorem.} For an MDP with Bellman operator
-        $T$ and value function $v^*$,
-            \vspace{0.5em}
+    Consider an affine DP with Bellman operator $T$ and value function $v^*$
+    \medskip
+
+    \Thm If $\rho(K_\sigma) < 1$ for all $\sigma \in \Sigma$, then
+    %
+    \begin{enumerate}
+        \item $v^*$ is the unique fixed point of $T$
+            in $\RR^\Xsf$
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item $T^n v \to v^*$ as $n \to \infty$ for all $v \in \RR^\Xsf$
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item A feasible policy is optimal if and only it is $v^*$-greedy
+        \vspace{0.5em}
+        \vspace{0.5em}
+        \item At least one optimal policy exists
+    \end{enumerate}
         %
-        \begin{enumerate}
-            \item $v^*$ is the unique fixed point of $T$
-                in $\RR^\Xsf$
-            \vspace{0.5em}
-            \vspace{0.5em}
-            \item $T$ is a contraction mapping on $\RR^\Xsf$
-            \vspace{0.5em}
-            \vspace{0.5em}
-            \item A feasible policy is optimal if and only it is $v^*$-greedy
-            \vspace{0.5em}
-            \vspace{0.5em}
-            \item At least one optimal policy exists
-        \end{enumerate}
-        %
-    \end{block}
 
 
 \end{frame}
@@ -857,21 +977,17 @@ def spectral_radius(K):
 
 \begin{frame}
     
-    \vspace{0.4em}
-    \vspace{0.4em}
-    \vspace{0.4em}
-    \begin{block}{\vspace*{-3ex}}
-    {\bf Proposition.} Under the stated condition, VFI, HPI and OPI all converge
-    \vspace{0.4em}
-    \vspace{0.4em}
-
-    Moreover, HPI converges to an exact optimal policy in finitely many steps
-    \end{block}
-
+    \Prop Under the stated conditions, 
+    %
+    \begin{enumerate}
+        \item VFI, HPI and OPI all converge, and
+            \medskip
+        \item HPI converges to an exact optimal policy in finitely many steps
+    \end{enumerate}
 
     \vspace{0.4em}
     \vspace{0.4em}
-    For details and proofs see Ch.\ 5 of \url{https://dp.quantecon.org/}
+    For details and proofs see \url{https://dp.quantecon.org/}
 
 
 \end{frame}
