@@ -48,6 +48,7 @@ from typing import NamedTuple
 import jax
 import jax.numpy as jnp
 from jax.scipy.special import gamma
+from jax.scipy.integrate import trapezoid
 
 
 # %% [markdown]
@@ -342,31 +343,20 @@ def κ(model, z, π):
 
 # %% 
 @jax.jit
-def Q(h, model):
-
+def Q(model, h):
+    " Evaluate Qh on the grid of π values in π_grid. "
     c, π_grid = model.c, model.π_grid
     L0, L1 = model.L0, model.L1
-    z0, z1 = model.z0, model.z1
-    mc_size = model.mc_size
     h_new = np.empty_like(π_grid)
-    h_func = lambda p: np.interp(p, π_grid, h)
+    hf = lambda π: np.interp(π, π_grid, h)
+    f_pi = lambda π, z: (1 - π) * f0(model, z) + π * f1(model, z)
 
-    for i in prange(len(π_grid)):
-        π = π_grid[i]
+    def compute_integral(π):
+        e = hf(κ(model, z_grid, π))
+        y = min(π_0 * L0, (1 - π_0) * L1, e) * f_pi(π, z_grid)
+        return trapezoid(y, z_grid)
 
-        # Find the expected value of J by integrating over z
-        integral_f0, integral_f1 = 0, 0
-        for m in range(mc_size):
-            π_0 = κ(model, z0[m], π)  # Draw z from f0 and update π
-            integral_f0 += min(π_0 * L0, (1 - π_0) * L1, h_func(π_0))
-
-            π_1 = κ(model, z1[m], π)  # Draw z from f1 and update π
-            integral_f1 += min(π_1 * L0, (1 - π_1) * L1, h_func(π_1))
-
-        integral = ((1 - π) * integral_f0 + π * integral_f1) / mc_size
-
-        h_new[i] = c + integral
-
+    h_new = jax.vmap(compute_integral, π_grid)
     return h_new
 
 
@@ -374,16 +364,15 @@ def Q(h, model):
 # To solve the key functional equation, we will iterate using `Q` to find the fixed point
 
 # %% 
-def solve_model(model, tol=1e-4, max_iter=1000):
+def solve_model(model, tol=1e-5, max_iter=1_000):
     " Compute the continuation cost function. "
-
-    h = np.zeros(len(model.π_grid))
+    h = jnp.zeros(len(model.π_grid))
     i = 0
     error = tol + 1
 
     while i < max_iter and error > tol:
         h_new = Q(h, model)
-        error = np.max(np.abs(h - h_new))
+        error = jnp.max(jnp.abs(h - h_new))
         i += 1
         h = h_new
 
@@ -442,10 +431,10 @@ def find_cutoff_rule(model, h):
     cost_f1 = (1 - π_grid) * L1
     
     # Find B: largest π where cost_f0 <= min(cost_f1, h)
-    optimal_cost = np.minimum(np.minimum(cost_f0, cost_f1), h)
+    optimal_cost = jnp.minimum(jnp.minimum(cost_f0, cost_f1), h)
     choose_f0 = (cost_f0 <= cost_f1) & (cost_f0 <= h)
     
-    if np.any(choose_f0):
+    if jnp.any(choose_f0):
         B = π_grid[choose_f0][-1]  # Last point where we choose f0
     else:
         assert False, "No point where we choose f0"
@@ -453,7 +442,7 @@ def find_cutoff_rule(model, h):
     # Find A: smallest π where cost_f1 <= min(cost_f0, h)  
     choose_f1 = (cost_f1 <= cost_f0) & (cost_f1 <= h)
     
-    if np.any(choose_f1):
+    if jnp.any(choose_f1):
         A = π_grid[choose_f1][0]  # First point where we choose f1
     else:
         assert False, "No point where we choose f1"
