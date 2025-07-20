@@ -284,32 +284,35 @@ def p(x, a, b):
     return r * x**(a-1) * (1 - x)**(b-1)
 
 class Model(NamedTuple):
-    a0: float            # Parameters of beta distributions
-    b0: float
-    a1: float
-    b1: float
-    c: float             # Cost of another draw
-    grid_size: int
+    a0: float            # Parameters of f_0 beta distributions
+    b0: float            # Parameters of f_0 beta distributions
+    a1: float            # Parameters of f_1 beta distributions
+    b1: float            # Parameters of f_1 beta distributions
+    c:  float            # Cost of another draw
     L0: float            # Cost of selecting f0 when f1 is true
     L1: float            # Cost of selecting f1 when f0 is true
-    π_grid: jnp.ndarray
-    mc_size: int
-    u: jnp.ndarray
+    π_grid: jnp.ndarray  # Grid over π space
+    z_grid: jnp.ndarray  # Grid over z space 
 
 
 # %% hide-output=false
 def create_model_instance(
         c=1.25, a0=1, b0=1, a1=3, b1=1.2, L0=25, L1=25, 
-        grid_size=200, mc_size=1000, seed=1234
+        pi_grid_size=250, z_grid_size=250, seed=1234
     ):
+    """
+    Create an instance of the model.  The two distributions are assumed to be
+    Beta and hence supported on (0, 1).  This is reflected in the fact that
+    z_grid is over the space space.
 
+    """
     key = jax.random.PRNGKey(seed)
-    π_grid = np.linspace(0, 1, grid_size)
-    mc_size = mc_size
-    z0 = jax.random.uniform(key, (mc_size,))
+    ϵ = 1e-10
+    π_grid = jnp.linspace(ϵ, 1 - ϵ, pi_grid_size)
+    z_grid = jnp.linspace(ϵ, 1 - ϵ, z_grid_size)
     return Model(
-        a0=a0, b0=b0, a1=a1, b1=b1, c=c, grid_size=grid_size,
-        L0=L0, L1=L1, π_grid=π_grid, mc_size=mc_size, u=u
+        a0=a0, b0=b0, a1=a1, b1=b1, c=c, L0=L0, L1=L1, 
+        π_grid=π_grid, z_grid=z_grid
     )
 
 
@@ -319,19 +322,12 @@ def f0(model, x):
 def f1(model, x):
     return p(x, model.a1, model.b1)
 
-def f0_rvs(model):
-    return np.random.beta(model.a0, model.b0)
-
-def f1_rvs(model):
-    return np.random.beta(model.a1, model.b1)
-
 def κ(model, z, π):
     """
     Updates π using Bayes' rule and the current observation z
 
     """
-    f0, f1 = model.f0, model.f1
-    π_f0, π_f1 = (1 - π) * f0(z), π * f1(z)
+    π_f0, π_f1 = (1 - π) * f0(model, z), π * f1(model, z)
     π_new = π_f1 / (π_f0 + π_f1)
     return π_new
 
@@ -342,21 +338,23 @@ def κ(model, z, π):
 # - When we evaluate $ \mathbb E[J(\pi')] $ between grid points, we use linear interpolation.  
 
 # %% 
-@jax.jit
+#@jax.jit
 def Q(model, h):
     " Evaluate Qh on the grid of π values in π_grid. "
     c, π_grid = model.c, model.π_grid
     L0, L1 = model.L0, model.L1
-    h_new = np.empty_like(π_grid)
-    hf = lambda π: np.interp(π, π_grid, h)
+    h_new = jnp.empty_like(π_grid)
+    hf = lambda π: jnp.interp(π, π_grid, h)
     f_pi = lambda π, z: (1 - π) * f0(model, z) + π * f1(model, z)
 
     def compute_integral(π):
-        e = hf(κ(model, z_grid, π))
-        y = min(π_0 * L0, (1 - π_0) * L1, e) * f_pi(π, z_grid)
+        # Evaluate the integrand at every z in z_grid
+        m = jnp.minimum(π * L0, (1 - π) * L1)
+        y = jnp.minimum(m, hf(κ(model, z_grid, π))) * f_pi(π, z_grid)
+        # Approximate the integral
         return trapezoid(y, z_grid)
 
-    h_new = jax.vmap(compute_integral, π_grid)
+    h_new = c + jax.vmap(compute_integral)(π_grid)
     return h_new
 
 
@@ -366,12 +364,12 @@ def Q(model, h):
 # %% 
 def solve_model(model, tol=1e-5, max_iter=1_000):
     " Compute the continuation cost function. "
-    h = jnp.zeros(len(model.π_grid))
+    h = jnp.zeros_like(model.π_grid)
     i = 0
     error = tol + 1
 
     while i < max_iter and error > tol:
-        h_new = Q(h, model)
+        h_new = Q(model, h)
         error = jnp.max(jnp.abs(h - h_new))
         i += 1
         h = h_new
@@ -379,34 +377,8 @@ def solve_model(model, tol=1e-5, max_iter=1_000):
     if error > tol:
         print("Failed to converge!")
 
-    return h_new
+    return i, h_new
 
-
-# %% [markdown]
-# ## Analysis
-#
-# Let’s inspect outcomes.
-#
-# We will be using the default parameterization with distributions like so
-
-# %% hide-output=false
-model = Model()
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(model.f0(model.π_grid), label="$f_0$")
-ax.plot(model.f1(model.π_grid), label="$f_1$")
-ax.set(ylabel="probability of $z_k$", xlabel="$z_k$", title="Distributions")
-ax.legend()
-
-plt.show()
-
-# %% [markdown]
-# ### Cost Function
-#
-# To solve the model, we will call our `solve_model` function
-
-# %% hide-output=false
-h_star = solve_model(model)    # Solve the model
 
 
 # %% [markdown]
@@ -414,7 +386,7 @@ h_star = solve_model(model)    # Solve the model
 # and plot these on our cost function plot
 
 # %% hide-output=false
-@jit
+#@jax.jit
 def find_cutoff_rule(model, h):
 
     """
@@ -425,7 +397,6 @@ def find_cutoff_rule(model, h):
 
     π_grid = model.π_grid
     L0, L1 = model.L0, model.L1
-
     # Evaluate cost at all points on grid for choosing a model
     cost_f0 = π_grid * L0
     cost_f1 = (1 - π_grid) * L1
@@ -449,31 +420,57 @@ def find_cutoff_rule(model, h):
 
     return (B, A)
 
-B, A = find_cutoff_rule(model, h_star)
-cost_L0 = model.π_grid * model.L0
-cost_L1 = (1 - model.π_grid) * model.L1
+
+# %% [markdown]
+# ## Analysis
+#
+# Let’s inspect outcomes.
+#
+# We will be using the default parameterization with distributions like so
+
+# %% hide-output=false
+model = create_model_instance()
+a0, b0, a1, b1, c, L0, L1, π_grid, z_grid = model
 
 fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(π_grid, f0(model, π_grid), label="$f_0$")
+ax.plot(π_grid, f1(model, π_grid), label="$f_1$")
+ax.set(ylabel="probability of $z_k$", xlabel="$z_k$", title="Distributions")
+ax.legend()
 
-ax.plot(model.π_grid, h_star, label='sample again')
-ax.plot(model.π_grid, cost_L1, label='choose f1')
-ax.plot(model.π_grid, cost_L0, label='choose f0')
-ax.plot(model.π_grid,
-        np.amin(np.column_stack([h_star, cost_L0, cost_L1]),axis=1),
-        lw=15, alpha=0.1, color='b', label=r'$J(\pi)$')
-
-ax.annotate(r"$B$", xy=(B + 0.01, 0.5), fontsize=14)
-ax.annotate(r"$A$", xy=(A + 0.01, 0.5), fontsize=14)
-
-plt.vlines(B, 0, (1 - B) * model.L1, linestyle="--")
-plt.vlines(A, 0, A * model.L0, linestyle="--")
-
-ax.set(xlim=(0, 1), ylim=(0, 0.5 * max(model.L0, model.L1)), ylabel="cost",
-       xlabel=r"$\pi$", title=r"Cost function $J(\pi)$")
-
-plt.legend(borderpad=1.1)
 plt.show()
 
+# %% [markdown]
+#
+# Let’s solve the model
+
+num_iter, h_star = solve_model(model)    # Solve the model
+print(f"Model solved in {num_iter} iterations.")
+
+cost_L0 = π_grid * L0
+cost_L1 = (1 - π_grid) * L1
+# B, A = find_cutoff_rule(model, h_star)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(π_grid, h_star, label='sample again')
+ax.plot(π_grid, cost_L1, label='choose f1')
+ax.plot(π_grid, cost_L0, label='choose f0')
+ax.plot(π_grid,
+        np.amin(np.column_stack([h_star, cost_L0, cost_L1]), axis=1),
+        lw=10, alpha=0.1, color='b', label=r'$J(\pi)$')
+# ax.annotate(r"$B$", xy=(B + 0.01, 0.5), fontsize=14)
+# ax.annotate(r"$A$", xy=(A + 0.01, 0.5), fontsize=14)
+# plt.vlines(B, 0, (1 - B) * model.L1, linestyle="--")
+# plt.vlines(A, 0, A * model.L0, linestyle="--")
+# ax.set(
+#     xlim=(0, 1), ylim=(0, 0.5 * max(model.L0, model.L1)), 
+#     ylabel="cost", xlabel=r"$\pi$", 
+#     title=r"Cost function $J(\pi)$"
+# )
+#
+plt.legend(borderpad=1.1)
+plt.show()
+#
 
 # %% [markdown]
 # The cost function $ J $ equals $ \pi L_0 $ for $ \pi \leq B $, and $ (1-\pi) L_1 $ for $ \pi
@@ -488,144 +485,3 @@ plt.show()
 # The decision-maker continues to sample until the probability that he attaches to
 # model $ f_1 $ falls below $ B $ or above $ A $.
 
-# %% [markdown]
-# ### Simulations
-#
-# The next figure shows the outcomes of 500 simulations of the decision process.
-#
-# On the left is a histogram of **stopping times**, i.e.,  the number of draws of $ z_k $ required to make a decision.
-#
-# The average number of draws is around 6.6.
-#
-# On the right is the fraction of correct decisions at the stopping time.
-#
-# In this case, the decision-maker is correct 80% of the time
-
-# %% hide-output=false
-def simulate(model, true_dist, h_star, π_0=0.5):
-
-    """
-    This function takes an initial condition and simulates until it
-    stops (when a decision is made)
-    """
-
-    f0, f1 = model.f0, model.f1
-    f0_rvs, f1_rvs = model.f0_rvs, model.f1_rvs
-    π_grid = model.π_grid
-    κ = model.κ
-
-    if true_dist == "f0":
-        f, f_rvs = model.f0, model.f0_rvs
-    elif true_dist == "f1":
-        f, f_rvs = model.f1, model.f1_rvs
-
-    # Find cutoffs
-    B, A = find_cutoff_rule(model, h_star)
-
-    # Initialize a couple of useful variables
-    decision_made = False
-    π = π_0
-    t = 0
-
-    while decision_made is False:
-        z = f_rvs()
-        t = t + 1
-        π = κ(z, π)
-        if π < B:
-            decision_made = True
-            decision = 0
-        elif π > A:
-            decision_made = True
-            decision = 1
-
-    if true_dist == "f0":
-        if decision == 0:
-            correct = True
-        else:
-            correct = False
-
-    elif true_dist == "f1":
-        if decision == 1:
-            correct = True
-        else:
-            correct = False
-
-    return correct, π, t
-
-def stopping_dist(model, h_star, ndraws=250, true_dist="f0"):
-
-    """
-    Simulates repeatedly to get distributions of time needed to make a
-    decision and how often they are correct
-    """
-
-    tdist = np.empty(ndraws, int)
-    cdist = np.empty(ndraws, bool)
-
-    for i in range(ndraws):
-        correct, π, t = simulate(model, true_dist, h_star)
-        tdist[i] = t
-        cdist[i] = correct
-
-    return cdist, tdist
-
-def simulation_plot(model):
-    h_star = solve_model(model)
-    ndraws = 500
-    cdist, tdist = stopping_dist(model, h_star, ndraws)
-
-    fig, ax = plt.subplots(1, 2, figsize=(16, 5))
-
-    ax[0].hist(tdist, bins=np.max(tdist))
-    ax[0].set_title(f"Stopping times over {ndraws} replications")
-    ax[0].set(xlabel="time", ylabel="number of stops")
-    ax[0].annotate(f"mean = {np.mean(tdist)}", xy=(max(tdist) / 2,
-                   max(np.histogram(tdist, bins=max(tdist))[0]) / 2))
-
-    ax[1].hist(cdist.astype(int), bins=2)
-    ax[1].set_title(f"Correct decisions over {ndraws} replications")
-    ax[1].annotate(f"% correct = {np.mean(cdist)}",
-                   xy=(0.05, ndraws / 2))
-
-    plt.show()
-
-simulation_plot(model)
-
-# %% [markdown]
-# ### Comparative Statics
-#
-# Now let’s consider the following exercise.
-#
-# We double the cost of drawing an additional observation.
-#
-# Before you look, think about what will happen:
-#
-# - Will the decision-maker be correct more or less often?  
-# - Will he make decisions sooner or later?  
-
-# %% hide-output=false
-model = WaldFriedman(c=2.5)
-simulation_plot(model)
-
-# %% [markdown]
-# Increased cost per draw has induced the decision-maker to take fewer draws before deciding.
-#
-# Because he decides with fewer draws, the percentage of time he is correct drops.
-#
-# This leads to him having a higher expected loss when he puts equal weight on both models.
-#
-# To facilitate comparative statics, we invite you to adjust the parameters of the model
-# and investigate
-#
-# - effects on the smoothness of the value function in the indecisive middle range
-#   as we increase the number of grid points in the piecewise linear  approximation.  
-# - effects of different settings for the cost parameters $ L_0, L_1, c $, the
-#   parameters of two beta distributions $ f_0 $ and $ f_1 $, and the number
-#   of points and linear functions $ m $ to use in the piece-wise continuous approximation to the value function.  
-# - various simulations from $ f_0 $ and associated distributions of waiting times to making a decision.  
-# - associated histograms of correct and incorrect decisions.  
-#
-#
-# <p><a id=f1 href=#f1-link><strong>[1]</strong></a> The decision maker acts as if he believes that the sequence of random variables
-# $ [z_{0}, z_{1}, \ldots] $ is *exchangeable*.  See [Exchangeability and Bayesian Updating](https://python.quantecon.org/exchangeable.html) and
-# [[Kreps, 1988](https://python.quantecon.org/zreferences.html#id111)] chapter 11, for  discussions of exchangeability.
