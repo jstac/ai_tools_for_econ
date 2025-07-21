@@ -277,6 +277,9 @@ from jax.scipy.integrate import trapezoid
 # ## Implementation
 
 # %% 
+
+
+
 @jax.jit
 def p(x, a, b):
     " Beta(a, b) density. "
@@ -307,7 +310,7 @@ def create_model_instance(
 
     """
     key = jax.random.PRNGKey(seed)
-    ϵ = 1e-10
+    ϵ = 1e-6  # Endpoints of open intervals, for stability
     π_grid = jnp.linspace(ϵ, 1 - ϵ, pi_grid_size)
     z_grid = jnp.linspace(ϵ, 1 - ϵ, z_grid_size)
     return Model(
@@ -338,22 +341,27 @@ def κ(model, z, π):
 # - When we evaluate $ \mathbb E[J(\pi')] $ between grid points, we use linear interpolation.  
 
 # %% 
-#@jax.jit
+@jax.jit
 def Q(model, h):
     " Evaluate Qh on the grid of π values in π_grid. "
-    c, π_grid = model.c, model.π_grid
     L0, L1 = model.L0, model.L1
-    h_new = jnp.empty_like(π_grid)
+    c, π_grid, z_grid = model.c, model.π_grid, model.z_grid
+    n = len(z_grid)
     hf = lambda π: jnp.interp(π, π_grid, h)
     f_pi = lambda π, z: (1 - π) * f0(model, z) + π * f1(model, z)
 
     def compute_integral(π):
         # Evaluate the integrand at every z in z_grid
-        m = jnp.minimum(π * L0, (1 - π) * L1)
-        y = jnp.minimum(m, hf(κ(model, z_grid, π))) * f_pi(π, z_grid)
+        next_π = κ(model, z_grid, π)
+        expected_loss_f0 = next_π * L0        # expected cost of choosing f0
+        expected_loss_f1 = (1 - next_π) * L1  # expected cost of choosing f1
+        m = jnp.minimum(expected_loss_f0, expected_loss_f1)
+        y = jnp.minimum(m, hf(next_π)) * f_pi(π, z_grid)
         # Approximate the integral
-        return trapezoid(y, z_grid)
+        dz = 1 / (n - 1)
+        return dz * (jnp.sum(y) - 0.5 * (y[0] + y[-1]))
 
+    # Compute integral at all π in π_grid, add c, return
     h_new = c + jax.vmap(compute_integral)(π_grid)
     return h_new
 
@@ -362,22 +370,28 @@ def Q(model, h):
 # To solve the key functional equation, we will iterate using `Q` to find the fixed point
 
 # %% 
-def solve_model(model, tol=1e-5, max_iter=1_000):
+@jax.jit
+def solve_model(model, tol=1e-8, max_iter=1_000):
     " Compute the continuation cost function. "
+
+    def update(state):
+        i, error, h = state
+        h_new = Q(model, h)
+        new_error = jnp.max(jnp.abs(h - h_new))
+        i += 1
+        return i, new_error, h_new
+
+    def test(state):
+        i, error, h = state
+        return (i < max_iter) & (error > tol)
+
     h = jnp.zeros_like(model.π_grid)
     i = 0
     error = tol + 1
-
-    while i < max_iter and error > tol:
-        h_new = Q(model, h)
-        error = jnp.max(jnp.abs(h - h_new))
-        i += 1
-        h = h_new
-
-    if error > tol:
-        print("Failed to converge!")
-
-    return i, h_new
+    initial_state = i, error, h
+    final_state = jax.lax.while_loop(test, update, initial_state)
+    i, error, h = final_state
+    return i, h
 
 
 
@@ -432,13 +446,14 @@ def find_cutoff_rule(model, h):
 model = create_model_instance()
 a0, b0, a1, b1, c, L0, L1, π_grid, z_grid = model
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(π_grid, f0(model, π_grid), label="$f_0$")
-ax.plot(π_grid, f1(model, π_grid), label="$f_1$")
-ax.set(ylabel="probability of $z_k$", xlabel="$z_k$", title="Distributions")
-ax.legend()
 
-plt.show()
+def plot_densities():
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(π_grid, f0(model, π_grid), label="$f_0$")
+    ax.plot(π_grid, f1(model, π_grid), label="$f_1$")
+    ax.set(ylabel="probability of $z_k$", xlabel="$z_k$", title="Distributions")
+    ax.legend()
+    plt.show()
 
 # %% [markdown]
 #
@@ -449,7 +464,7 @@ print(f"Model solved in {num_iter} iterations.")
 
 cost_L0 = π_grid * L0
 cost_L1 = (1 - π_grid) * L1
-# B, A = find_cutoff_rule(model, h_star)
+B, A = find_cutoff_rule(model, h_star)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(π_grid, h_star, label='sample again')
@@ -458,18 +473,33 @@ ax.plot(π_grid, cost_L0, label='choose f0')
 ax.plot(π_grid,
         np.amin(np.column_stack([h_star, cost_L0, cost_L1]), axis=1),
         lw=10, alpha=0.1, color='b', label=r'$J(\pi)$')
-# ax.annotate(r"$B$", xy=(B + 0.01, 0.5), fontsize=14)
-# ax.annotate(r"$A$", xy=(A + 0.01, 0.5), fontsize=14)
-# plt.vlines(B, 0, (1 - B) * model.L1, linestyle="--")
-# plt.vlines(A, 0, A * model.L0, linestyle="--")
-# ax.set(
-#     xlim=(0, 1), ylim=(0, 0.5 * max(model.L0, model.L1)), 
-#     ylabel="cost", xlabel=r"$\pi$", 
-#     title=r"Cost function $J(\pi)$"
-# )
+ax.annotate(r"$B$", xy=(B + 0.01, 0.5), fontsize=14)
+ax.annotate(r"$A$", xy=(A + 0.01, 0.5), fontsize=14)
+plt.vlines(B, 0, (1 - B) * model.L1, linestyle="--")
+plt.vlines(A, 0, A * model.L0, linestyle="--")
+ax.set(
+    xlim=(0, 1), ylim=(0, 0.5 * max(model.L0, model.L1)), 
+    ylabel="cost", xlabel=r"$\pi$", 
+    title=r"Cost function $J(\pi)$"
+)
 #
-plt.legend(borderpad=1.1)
+plt.legend(frameon=False)
 plt.show()
+#
+
+# h = h_star
+# hf = lambda π: jnp.interp(π, π_grid, h)
+# f_pi = lambda π, z: (1 - π) * f0(model, z) + π * f1(model, z)
+# n = len(z_grid)
+#
+# def compute_integral(π):
+#     # Evaluate the integrand at every z in z_grid
+#     m = jnp.minimum(π * L0, (1 - π) * L1)
+#     y = jnp.minimum(m, hf(κ(model, z_grid, π))) * f_pi(π, z_grid)
+#     # Approximate the integral
+#     dz = 1 / (n - 1)
+#     return dz * (jnp.sum(y) - 0.5 * (y[0] + y[-1]))
+#
 #
 
 # %% [markdown]
