@@ -243,7 +243,7 @@ ax.plot(α_vals, w_star_vec, linewidth=2, alpha=0.6,
         label="reservation wage")
 ax.legend(frameon=False)
 ax.set_xlabel(r"$\alpha$")
-ax.set_xlabel(r"$w$")
+ax.set_ylabel(r"$w$")
 plt.show()
 ```
 
