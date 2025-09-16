@@ -27,7 +27,7 @@ draws
 In addition to what's in Anaconda, this lecture will need the QE library:
 
 ```{code-cell} ipython3
-#!pip install quantecon  # Uncomment if necessary
+!pip install quantecon  
 ```
 
 We use the following imports.
