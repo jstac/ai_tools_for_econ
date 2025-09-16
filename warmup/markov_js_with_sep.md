@@ -121,14 +121,13 @@ def create_js_with_sep_model(
         ρ: float = 0.9,        # wage persistence
         ν: float = 0.2,        # wage volatility
         β: float = 0.96,       # discount factor
-        α: float = 0.1,        # separation rate
-        c: float = 1.5         # unemployment compensation
+        α: float = 0.05,       # separation rate
+        c: float = 1.0         # unemployment compensation
     ) -> Model:
     """Creates an instance of the job search model with separation."""
     mc = tauchen(n, ρ, ν)
     w_vals, P = np.exp(mc.state_values), mc.P
     return Model(n, w_vals, P, β, c, α)
-
 ```
 
 Here's the Bellman operator for the unemployed worker's value function:
@@ -168,6 +167,28 @@ def vfi(model: Model, verbose: bool = False):
     v_star = successive_approx(lambda v: T(v, model), v_init, verbose)
     σ_star = get_greedy(v_star, model)
     return v_star, σ_star
+
+def get_reservation_wage(σ: np.ndarray, model: Model) -> float:
+    """
+    Calculate the reservation wage from a given policy.
+
+    Parameters:
+    - σ: Policy array where σ[i] = True means accept wage w_vals[i]
+    - model: Model instance containing wage values
+
+    Returns:
+    - Reservation wage (lowest wage for which policy indicates acceptance)
+    """
+    n, w_vals, P, β, c, α = model
+
+    # Find all wage indices where policy indicates acceptance
+    accept_indices = np.where(σ)[0]
+
+    if len(accept_indices) == 0:
+        return np.inf  # Agent never accepts any wage
+
+    # Return the lowest wage that is accepted
+    return w_vals[accept_indices[0]]
 ```
 
 ## Computing the Solution
@@ -183,13 +204,7 @@ d = 1 / (1 - β * (1 - α))
 accept = d * (w_vals + α * β * P @ v_star)
 h_star = c + β * P @ v_star
 
-w_star = np.inf
-for (i, w) in enumerate(w_vals):
-    if accept[i] >= h_star[i]:
-        w_star = w
-        break
-
-assert w_star != np.inf, "Agent never accepts"
+w_star = get_reservation_wage(σ_star, model)
 
 fig, ax = plt.subplots(figsize=(9, 5.2))
 ax.plot(w_vals, h_star, linewidth=4, ls="--", alpha=0.4,
@@ -200,7 +215,6 @@ ax.plot(w_vals, v_star, "k-", alpha=0.7, label=r"$v_u^*(w)$")
 ax.legend(frameon=False)
 ax.set_xlabel(r"$w$")
 plt.show()
-
 ```
 
 ## Sensitivity Analysis
@@ -213,20 +227,8 @@ Let's examine how reservation wages change with the separation rate α:
 w_star_vec = np.empty_like(α_vals)
 for (i_α, α) in enumerate(α_vals):
     model = create_js_with_sep_model(α=α)
-    n, w_vals, P, β, c, α = model
     v_star, σ_star = vfi(model)
-
-    d = 1 / (1 - β * (1 - α))
-    accept = d * (w_vals + α * β * P @ v_star)
-    h_star = c + β * P @ v_star
-
-    w_star = np.inf
-    for (i_w, w) in enumerate(w_vals):
-        if accept[i_w] >= h_star[i_w]:
-            w_star = w
-            break
-
-    assert w_star != np.inf, "Agent never accepts"
+    w_star = get_reservation_wage(σ_star, model)
     w_star_vec[i_α] = w_star
 
 fig, ax = plt.subplots(figsize=(9, 5.2))
@@ -236,7 +238,6 @@ ax.legend(frameon=False)
 ax.set_xlabel(r"$\alpha$")
 ax.set_xlabel(r"$w$")
 plt.show()
-
 ```
 
 ## Employment Simulation
@@ -282,7 +283,7 @@ def update_agent(is_employed, wage_idx, model, σ_star):
 ```{code-cell} ipython3
 def simulate_employment_path(
         model: Model,     # Model detaisl
-        T: int = 1_000,   # Simulation length
+        T: int = 2_000,   # Simulation length
         seed: int = 42    # Set seed for simulation
     ):
     """
@@ -317,8 +318,11 @@ def simulate_employment_path(
 Let's create a comprehensive plot of the employment simulation:
 
 ```{code-cell} ipython3
-
 model = create_js_with_sep_model()
+
+# Calculate reservation wage for plotting
+v_star, σ_star = vfi(model)
+w_star = get_reservation_wage(σ_star, model)
 
 wage_path, employment_status = simulate_employment_path(model)
 
@@ -336,9 +340,12 @@ ax1.set_ylim(-0.1, 1.1)
 
 # Plot wage path with employment status coloring
 ax2.plot(wage_path, 'b-', alpha=0.7, linewidth=1)
+ax2.axhline(y=w_star, color='black', linestyle='--', alpha=0.8,
+           label=f'Reservation wage: {w_star:.2f}')
 ax2.set_xlabel('time')
 ax2.set_ylabel('wage')
 ax2.set_title('Wage path (actual and offers)')
+ax2.legend()
 
 # Plot cumulative fraction of time unemployed
 unemployed_indicator = (employment_status == 0).astype(int)
@@ -433,41 +440,57 @@ def simulate_cross_section(
 
     return unemployment_rates, employment_matrix
 
+def plot_cross_sectional_unemployment(model: Model):
+    """
+    Generate cross-sectional unemployment rate plot for a given model.
+
+    Parameters:
+    - model: Model instance with parameters
+    """
+    unemployment_rates, employment_matrix = simulate_cross_section(model)
+
+    fig, ax = plt.subplots(figsize=(9.6, 4.8))
+
+    # Plot unemployment rate over time
+    ax.plot(unemployment_rates, 'b-', alpha=0.8, linewidth=1.5,
+            label=f'Cross-sectional unemployment rate (c={model.c})')
+
+    # Add horizontal line for average unemployment rate
+    avg_unemployment = np.mean(unemployment_rates)
+    ax.axhline(y=avg_unemployment, color='k', linestyle='--', alpha=0.7,
+               label=f'Average: {avg_unemployment:.3f}')
+
+    # Add shaded region for ±1 standard deviation
+    window_size = 50
+    rolling_std = np.array([
+        np.std(unemployment_rates[max(0, t-window_size):t+1])
+        for t in range(len(unemployment_rates))
+    ])
+
+    ax.fill_between(range(len(unemployment_rates)),
+                    unemployment_rates - rolling_std,
+                    unemployment_rates + rolling_std,
+                    alpha=0.2, color='blue',
+                    label='±1 rolling std')
+
+    ax.set_xlabel('time')
+    ax.set_ylabel('unemployment rate')
+    ax.set_title(f'Cross-sectional unemployment rate (c={model.c})')
+    ax.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 
 model = create_js_with_sep_model()
+plot_cross_sectional_unemployment(model)
+```
 
-unemployment_rates, employment_matrix = simulate_cross_section(model)
+## Cross-Sectional Analysis with Lower Unemployment Compensation (c=0.5)
 
-fig, ax = plt.subplots(figsize=(9.6, 4.8))
+Let's examine how the cross-sectional unemployment rate changes with lower unemployment compensation:
 
-# Plot unemployment rate over time
-ax.plot(unemployment_rates, 'b-', alpha=0.8, linewidth=1.5,
-        label='Cross-sectional unemployment rate')
-
-# Add horizontal line for average unemployment rate
-avg_unemployment = np.mean(unemployment_rates)
-ax.axhline(y=avg_unemployment, color='k', linestyle='--', alpha=0.7,
-           label=f'Average: {avg_unemployment:.3f}')
-
-# Add shaded region for ±1 standard deviation
-window_size = 50
-rolling_std = np.array([
-    np.std(unemployment_rates[max(0, t-window_size):t+1])
-    for t in range(len(unemployment_rates))
-])
-
-ax.fill_between(range(len(unemployment_rates)),
-                unemployment_rates - rolling_std,
-                unemployment_rates + rolling_std,
-                alpha=0.2, color='blue',
-                label='±1 rolling std')
-
-ax.set_xlabel('time')
-ax.set_ylabel('unemployment rate')
-ax.set_title(f'Cross-sectional unemployment rate')
-ax.legend()
-
-plt.tight_layout()
-plt.show()
+```{code-cell} ipython3
+model_low_c = create_js_with_sep_model(c=0.5)
+plot_cross_sectional_unemployment(model_low_c)
 ```
