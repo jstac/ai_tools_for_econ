@@ -13,6 +13,10 @@ kernelspec:
 
 # Job Search
 
+*Prepared for the Computational Economics Workshop at Hitotsubashi*
+
+Author: [John Stachurski](https://johnstachurski.net)
+
 
 In this lecture we study a basic infinite-horizon job search problem with Markov wage
 draws 
@@ -226,7 +230,21 @@ Here's the optimal policy:
 
 ```{code-cell} ipython3
 fig, ax = plt.subplots()
-ax.plot(σ_star)
+ax.plot(w_vals, σ_star)
+ax.set_xlabel("wage values")
+ax.set_ylabel("optimal choice (stop=1)")
+plt.show()
+```
+
+For context, we can plot it against the stationary distribution of the wage
+offer process.
+
+```{code-cell} ipython3
+mc = qe.MarkovChain(P, state_values=w_vals)
+ψ = mc.stationary_distributions[0]
+fig, ax = plt.subplots()
+ax.plot(w_vals, σ_star, 'k-')
+ax.bar(w_vals, 200 * ψ, alpha=0.05)
 ax.set_xlabel("wage values")
 ax.set_ylabel("optimal choice (stop=1)")
 plt.show()
