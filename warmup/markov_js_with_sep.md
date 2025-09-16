@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.17.2
+    jupytext_version: 1.17.3
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -401,8 +401,8 @@ def simulate_cross_section_numba(
 
 def simulate_cross_section(
         model: Model,
-        n_agents: int = 10_000,
-        T: int = 1000,
+        n_agents: int = 100_000,
+        T: int = 200,
         seed: int = 42
     ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -455,11 +455,6 @@ def plot_cross_sectional_unemployment(model: Model):
     ax.plot(unemployment_rates, 'b-', alpha=0.8, linewidth=1.5,
             label=f'Cross-sectional unemployment rate (c={model.c})')
 
-    # Add horizontal line for average unemployment rate
-    avg_unemployment = np.mean(unemployment_rates)
-    ax.axhline(y=avg_unemployment, color='k', linestyle='--', alpha=0.7,
-               label=f'Average: {avg_unemployment:.3f}')
-
     # Add shaded region for ±1 standard deviation
     window_size = 50
     rolling_std = np.array([
@@ -476,12 +471,15 @@ def plot_cross_sectional_unemployment(model: Model):
     ax.set_xlabel('time')
     ax.set_ylabel('unemployment rate')
     ax.set_title(f'Cross-sectional unemployment rate (c={model.c})')
+    ax.set_ylim(0, 1)
+    ax.grid(alpha=0.3)
     ax.legend()
 
     plt.tight_layout()
     plt.show()
+```
 
-
+```{code-cell} ipython3
 model = create_js_with_sep_model()
 plot_cross_sectional_unemployment(model)
 ```
@@ -493,4 +491,12 @@ Let's examine how the cross-sectional unemployment rate changes with lower unemp
 ```{code-cell} ipython3
 model_low_c = create_js_with_sep_model(c=0.5)
 plot_cross_sectional_unemployment(model_low_c)
+```
+
+```{code-cell} ipython3
+
+```
+
+```{code-cell} ipython3
+
 ```

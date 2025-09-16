@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.17.2
+    jupytext_version: 1.17.3
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -441,8 +441,8 @@ def _simulate_cross_section_compiled(key, model, σ_star, n_agents, T):
 
 def simulate_cross_section(
         model: Model,
-        n_agents: int = 10_000,
-        T: int = 1000,
+        n_agents: int = 100_000,
+        T: int = 200,
         seed: int = 42
     ) -> tuple[jnp.ndarray, jnp.ndarray]:
     """
@@ -470,7 +470,9 @@ def simulate_cross_section(
     unemployment_rates = 1 - jnp.mean(employment_matrix, axis=0)
 
     return unemployment_rates, employment_matrix
+```
 
+```{code-cell} ipython3
 def plot_cross_sectional_unemployment(model: Model):
     """
     Generate cross-sectional unemployment rate plot for a given model.
@@ -485,11 +487,6 @@ def plot_cross_sectional_unemployment(model: Model):
     # Plot unemployment rate over time
     ax.plot(unemployment_rates, 'b-', alpha=0.8, linewidth=1.5,
             label=f'Cross-sectional unemployment rate (c={model.c})')
-
-    # Add horizontal line for average unemployment rate
-    avg_unemployment = jnp.mean(unemployment_rates)
-    ax.axhline(y=avg_unemployment, color='k', linestyle='--', alpha=0.7,
-               label=f'Average: {avg_unemployment:.3f}')
 
     # Add shaded region for ±1 standard deviation
     window_size = 50
@@ -507,12 +504,15 @@ def plot_cross_sectional_unemployment(model: Model):
     ax.set_xlabel('time')
     ax.set_ylabel('unemployment rate')
     ax.set_title(f'Cross-sectional unemployment rate (c={model.c})')
+    ax.grid(alpha=0.4)
+    ax.set_ylim(0, 1)
     ax.legend()
 
     plt.tight_layout()
     plt.show()
+```
 
-
+```{code-cell} ipython3
 model = create_js_with_sep_model()
 plot_cross_sectional_unemployment(model)
 ```
@@ -524,4 +524,8 @@ Let's examine how the cross-sectional unemployment rate changes with lower unemp
 ```{code-cell} ipython3
 model_low_c = create_js_with_sep_model(c=0.5)
 plot_cross_sectional_unemployment(model_low_c)
+```
+
+```{code-cell} ipython3
+
 ```
