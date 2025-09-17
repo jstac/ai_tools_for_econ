@@ -550,7 +550,7 @@ for c in c_values:
 fig, ax = plt.subplots()
 ax.plot(
     c_values, rates, alpha=0.8, 
-    linewidth=1.5, label=f'Unemployment rate at c={c}'
+    linewidth=1.5, label=f'Unemployment rate'
 )
 ax.legend(frameon=False)
 plt.show()
