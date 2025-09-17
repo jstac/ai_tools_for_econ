@@ -526,6 +526,33 @@ model_low_c = create_js_with_sep_model(c=0.5)
 plot_cross_sectional_unemployment(model_low_c)
 ```
 
+## Exercise
+
+Create a plot that shows how the steady state cross-sectional unemployment rate
+changes with unemployment compensation.
+
 ```{code-cell} ipython3
+for _ in range(20):
+    print('Solution below!')
+
+```
+
+## Solution
+
+```{code-cell} ipython3
+c_values = 1.0, 0.8, 0.6, 0.4, 0.2
+rates = []
+for c in c_values:
+    model = create_js_with_sep_model(c=c)
+    unemployment_rates, employment_matrix = simulate_cross_section(model)
+    rates.append(unemployment_rates[-1])
+
+fig, ax = plt.subplots()
+ax.plot(
+    c_values, rates, alpha=0.8, 
+    linewidth=1.5, label=f'Unemployment rate at c={c}'
+)
+ax.legend(frameon=False)
+plt.show()
 
 ```
