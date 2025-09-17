@@ -4,24 +4,18 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.7
+    jupytext_version: 1.17.2
 kernelspec:
-  display_name: Python
-  language: python3
   name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
 ---
 
 # Adventures with Autodiff
 
-+++
+*Prepared for the Computational Economics Workshop at Hitotsubashi*
 
-# GPU
-
-This lecture was built using a machine with JAX installed and access to a GPU.
-
-To run this lecture on [Google Colab](https://colab.research.google.com/), click on the “play” icon top right, select Colab, and set the runtime environment to include a GPU.
-
-To run this lecture on your own machine, you need to install [Google JAX](https://github.com/google/jax).
+Author: [John Stachurski](https://johnstachurski.net)
 
 +++
 
@@ -49,21 +43,14 @@ multi-dimensional nonlinear optimization and root-finding problems.
 
 We need the following imports
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 import jax
+from jax import vmap, grad
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-```
-
-Checking for a GPU:
-
-```{code-cell}
-:hide-output: false
-
-!nvidia-smi
 ```
 
 ## What is automatic differentiation?
@@ -88,7 +75,7 @@ $$
 
 where $ h $ is a small positive number.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def f(x):
@@ -99,7 +86,7 @@ def f_prime(x):
     "True derivative."
     return 2 * np.exp(2 * x)
 
-def Df(x, h=0.1):
+def Df(x, h=0.01):
     "Approximate derivative (finite difference)."
     return (f(x + h) - f(x))/h
 
@@ -130,7 +117,7 @@ The situation is exponentially worse in high dimensions / with higher order deri
 Symbolic calculus tries to use rules for differentiation to produce a single
 closed-form expression representing a derivative.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 from sympy import symbols, diff
@@ -182,7 +169,7 @@ Let’s start with some real-valued functions on $ \mathbb R $.
 
 Let’s test JAX’s auto diff with a relatively simple function.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def f(x):
@@ -191,26 +178,26 @@ def f(x):
 
 We use `grad` to compute the gradient of a real-valued function:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
-f_prime = jax.grad(f)
+f_prime = grad(f)
 ```
 
 Let’s plot the result:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 x_grid = jnp.linspace(-5, 5, 100)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
 ax.plot(x_grid, [f(x) for x in x_grid], label="$f$")
-ax.plot(x_grid, [f_prime(x) for x in x_grid], label="$f'$")
+ax.plot(x_grid, vmap(f_prime)(x_grid), label="$f'$")
 ax.legend()
 plt.show()
 ```
@@ -219,32 +206,32 @@ plt.show()
 
 What happens if the function is not differentiable?
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def f(x):
     return jnp.abs(x)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_prime = jax.grad(f)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
 ax.plot(x_grid, [f(x) for x in x_grid], label="$f$")
-ax.plot(x_grid, [f_prime(x) for x in x_grid], label="$f'$")
+ax.plot(x_grid, vmap(f_prime)(x_grid), label="$f'$")
 ax.legend()
 plt.show()
 ```
 
 At the nondifferentiable point $ 0 $, `jax.grad` returns the right derivative:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_prime(0.0)
@@ -254,7 +241,7 @@ f_prime(0.0)
 
 Let’s try differentiating through some loops and conditions.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def f(x):
@@ -265,28 +252,28 @@ def f(x):
     def f2(x):
         x = sum((x**i + i) for i in range(3))
         return x
-    y = f1(x) if x < 0 else f2(x)
+    y = jnp.where(x < 0, f1(x), f2(x))
     return y
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
-f_prime = jax.grad(f)
+f_prime = grad(f)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
-x_grid = jnp.linspace(-5, 5, 100)
+x_grid = jnp.linspace(-5, 5, 1000)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
 ax.plot(x_grid, [f(x) for x in x_grid], label="$f$")
-ax.plot(x_grid, [f_prime(x) for x in x_grid], label="$f'$")
+ax.plot(x_grid, vmap(f_prime)(x_grid), label="$f'$")
 ax.legend()
 plt.show()
 ```
@@ -295,7 +282,7 @@ plt.show()
 
 We can differentiate through linear interpolation, even though the function is not smooth:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 n = 20
@@ -307,19 +294,19 @@ ax.plot(x_grid, jnp.interp(x_grid, xp, yp))
 plt.show()
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_prime = jax.grad(jnp.interp)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 f_prime_vec = jax.vmap(f_prime, in_axes=(0, None, None))
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -339,7 +326,7 @@ As a simple application, we’ll use gradient descent to solve for the OLS param
 
 Here’s an implementation of gradient descent.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def grad_descent(f,       # Function to be minimized
@@ -355,7 +342,7 @@ def grad_descent(f,       # Function to be minimized
     
     """
     
-    f_grad = jax.grad(f)
+    f_grad = grad(f)
     x = jnp.array(x0)
     df = f_grad(x, args)
     ϵ = tol + 1
@@ -379,7 +366,7 @@ We’re going to test our gradient descent function my minimizing a sum of least
 
 Let’s generate some simulated data:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 n = 100
@@ -393,7 +380,7 @@ key, subkey = jax.random.split(key)
 y = α * x + β + σ * ϵ
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -403,7 +390,7 @@ plt.show()
 
 Let’s start by calculating the estimated slope and intercept using closed form solutions.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 mx = x.mean()
@@ -412,13 +399,13 @@ my = y.mean()
 β_hat = my - α_hat * mx
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 α_hat, β_hat
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -435,7 +422,7 @@ Let’s see if we can get the same values with our gradient descent function.
 
 First we set up the least squares loss function.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 @jax.jit
@@ -447,7 +434,7 @@ def loss(params, data):
 
 Now we minimize it:
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 p0 = jnp.zeros(2)  # Initial guess for α, β
@@ -457,7 +444,7 @@ data = x, y
 
 Let’s plot the results.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 fig, ax = plt.subplots()
@@ -479,7 +466,7 @@ Now let’s try fitting a second order polynomial.
 
 Here’s our new loss function.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 @jax.jit
@@ -493,7 +480,7 @@ Now we’re minimizing in three dimensions.
 
 Let’s try it.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 p0 = jnp.zeros(3)
@@ -502,8 +489,10 @@ p0 = jnp.zeros(3)
 fig, ax = plt.subplots()
 ax.scatter(x, y)
 ax.plot(x_grid, α_hat * x_grid**2 + β_hat * x_grid + γ_hat, 'k-', alpha=0.6)
-ax.text(0.1, 1.55, rf'$\hat \alpha = {α_hat:.3}$')
+ax.text(0.1, 1.58, rf'$\hat \alpha = {α_hat:.3}$')
 ax.text(0.1, 1.50, rf'$\hat \beta = {β_hat:.3}$')
+ax.text(0.1, 1.42, rf'$\hat \gamma = {γ_hat:.3}$')
+
 plt.show()
 ```
 
@@ -541,7 +530,7 @@ function and plot the result (following the examples above).
 
 Here’s one solution.
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 def loss(params, data):
@@ -549,7 +538,7 @@ def loss(params, data):
     return jnp.sum((y - jnp.polyval(params, x))**2)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 :hide-output: false
 
 k = 4
@@ -563,4 +552,12 @@ fig, ax = plt.subplots()
 ax.scatter(x, y)
 ax.plot(x_grid, jnp.polyval(p_hat, x_grid), 'k-', alpha=0.6)
 plt.show()
+```
+
+```{code-cell} ipython3
+
+```
+
+```{code-cell} ipython3
+
 ```
