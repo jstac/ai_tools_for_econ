@@ -56,7 +56,7 @@ At the start of each period, an unemployed worker receives wage offer $W_t$.
 We assume that 
 
 $$
-    W_{t+1} = \rho W_t + \nu Z_{t+1}
+    \ln W_{t+1} = \rho \ln W_t + \nu Z_{t+1}
 $$
 
 where $(Z_t)_{t \geq 0}$ is IID and standard normal.
