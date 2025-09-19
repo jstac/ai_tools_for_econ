@@ -439,6 +439,7 @@
         \vspace{0.5em}
         \vspace{0.5em}
     After computing $y_j = \sum_i x_i w_{ij}$ we 
+    \medskip
     %
     \begin{enumerate}
         \item add a bias term $b_j$ and
@@ -638,6 +639,8 @@
     \begin{itemize}
         \item $G_{\ell} (x) = \sigma_\ell(x W_\ell + b_\ell)$ 
         \vspace{0.5em}
+        \item $\theta := \{W_1, b_1, W_2, b_2, \ldots, W_m, b_m\}$
+        \vspace{0.5em}
         \item $\sigma_\ell$ is an activation function
     \end{itemize}
 
@@ -747,14 +750,14 @@
     ]
 
     % Training error curve (monotonically decreasing)
-    \addplot[color=blue, line width=2pt, name path=training] {0.9*exp(-0.35*x) + 0.0};
+    \addplot[color={rgb,255:red,31; green,119; blue,180}, line width=2pt, name path=training] {0.9*exp(-0.35*x) + 0.0};
 
     % Test error curve (U-shaped)
-    \addplot[color=red, line width=2pt, name path=test] {0.4*exp(-0.7*x) + 0.15*exp(0.35*(x-5)) + 0.42};
+    \addplot[color={rgb,255:red,255; green,127; blue,14}, line width=2pt, name path=test] {0.4*exp(-0.7*x) + 0.15*exp(0.35*(x-5)) + 0.42};
 
     % curve labels
-    \node[color=blue, font=\small\bfseries] at (8,0.25) {training loss};
-    \node[color=red, font=\small\bfseries] at (7,0.55) {test loss};
+    \node[color={rgb,255:red,31; green,119; blue,180}, font=\small\bfseries] at (8,0.25) {training loss};
+    \node[color={rgb,255:red,255; green,127; blue,14}, font=\small\bfseries] at (7,0.55) {test loss};
 
     % Underfitting and overfitting regions
     \draw[<->, >=stealth, gray, line width=1pt] (3.2,0.8) -- (0.2,0.8);
@@ -888,7 +891,7 @@
     \node[align=center, text width=3cm, font=\small] at (9.5, 1.1) {interpolation threshold};
 
     % Training error curve
-    \addplot[color=blue, line width=2pt] coordinates {
+    \addplot[color={rgb,255:red,31; green,119; blue,180}, line width=2pt] coordinates {
         (0, 1.0)
         (2, 0.7)
         (4, 0.45)
@@ -901,7 +904,7 @@
     };
 
     % Test error with double descent
-    \addplot[color=red, line width=2pt] coordinates {
+    \addplot[color={rgb,255:red,255; green,127; blue,14}, line width=2pt] coordinates {
         (0, 1.0)
         (2, 0.7)
         (4, 0.4)
@@ -916,8 +919,8 @@
     };
 
     % Labels
-    \node[color=blue, font=\small\bfseries] at (12,0.1) {training loss};
-    \node[color=red, font=\small\bfseries] at (12,0.4) {test loss};
+    \node[color={rgb,255:red,31; green,119; blue,180}, font=\small\bfseries] at (12,0.1) {training loss};
+    \node[color={rgb,255:red,255; green,127; blue,14}, font=\small\bfseries] at (12,0.4) {test loss};
 
 
     \end{axis}
